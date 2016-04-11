@@ -101,8 +101,20 @@ void TDIC(GTMatrix& gtMatrix, TDIMatrix& geMatrix, map<string,
         {
             //cout << "GT iteration: " << gt << "\n";
             // statistics associated with current T and global driver only 
-            float T1 = 0.0,   T1ge1 = 0.0, T1ge0 = 0.0, T0 = 0.0, T0ge1 = 0.0, T0ge0 = 0.0; 
-            float D1 = 0.0,   D1ge1 = 0.0, D1ge0 = 0.0, D0 = 0.0, D0ge1 = 0.0, D0ge0 = 0.0;
+            //float T1 = 0.0,   T1ge1 = 0.0, T1ge0 = 0.0, T0 = 0.0, T0ge1 = 0.0, T0ge0 = 0.0; 
+            //float D1 = 0.0,   D1ge1 = 0.0, D1ge0 = 0.0, D0 = 0.0, D0ge1 = 0.0, D0ge0 = 0.0;
+            
+            //T[0xT] T is the gt value
+            float T[2] = {0.0};
+            //TE[0xTE]] T is the gt value, E is the ge value
+            //eg. TE[3] means TE[0x11] save the count when T=1 and E=1
+            float TE[4] = {0.0};
+            //TD[0xTD] T is the gt value, D is the global driver value
+            float TD[4] = {0.0};
+            //TDE[0xTDE] T is the gt value, D is the global driver value, E is the ge value
+            //eg. TDE[7] means TDE[0x110] save the count when T=1 and D=1 and E=1
+            float TDE[8] = {0.0};
+            
             
             int curGTIndx = tumorGtIndices[gt];
 
@@ -110,6 +122,17 @@ void TDIC(GTMatrix& gtMatrix, TDIMatrix& geMatrix, map<string,
             
             for(int t = 0; t < nTumors; t++)
             {
+                int tVal = gtDataMatrix[gtRowStart + t];
+                int eVal = geDataMatrix[rowStartForGE + t];
+                int dVal = gtDataMatrix[rowStartForGlobDriver + t];
+                
+                T[tVal]++;
+                TE[tVal*2+eVal]++;
+                TD[tVal*2+dVal]++;
+                TDE[tVal*4+dVal*2+eVal]++;
+            }
+                
+              /*  
                 //if GT = 1 at current tumor, update stats for GT = 1 
                 if(gtDataMatrix[gtRowStart + t] == 1)
                 {   
@@ -153,18 +176,27 @@ void TDIC(GTMatrix& gtMatrix, TDIMatrix& geMatrix, map<string,
                     }
                 } 
             }
-
+            */
+            
+            //Therr is no count for T0ge0, T0ge1 and T0
+            TE[0]=TE[1] = 0.0;
+            T[0] = 0.0;
+                    
+                    
             float TFscore;
             if(curGTIndx == 0)
             {
-                TFscore = calcA0Fscore(T1,  T1ge1, T1ge0, T0,  T0ge1, T0ge0);
+                //TFscore = calcA0Fscore(T1,  T1ge1, T1ge0, T0,  T0ge1, T0ge0);
+                TFscore = calcA0Fscore(T[1],  TE[3], TE[2], T[0],  TE[1], TE[0]);
             }
             else 
             {
-                TFscore = calcFscore( T1,  T1ge1, T1ge0, T0,  T0ge1, T0ge0 );
+                //TFscore = calcFscore( T1,  T1ge1, T1ge0, T0,  T0ge1, T0ge0 );
+                TFscore = calcFscore( T[1],  TE[3], TE[2], T[0],  TE[1], TE[0] );
             }
 
-            float DFscore = calcFscore( D1, D1ge1, D1ge0, D0, D0ge1, D0ge0 );
+            //float DFscore = calcFscore( D1, D1ge1, D1ge0, D0, D0ge1, D0ge0 );
+            float DFscore = calcFscore( TD[1], TDE[3], TDE[2], TD[0], TDE[1], TDE[0] );
 
             float lnData = TFscore + DFscore + lntumorMutPriors[gt];
 
@@ -173,13 +205,17 @@ void TDIC(GTMatrix& gtMatrix, TDIMatrix& geMatrix, map<string,
             float pGT1GE1, pGT0GE1;
             if(gt == 0)
             {
-                pGT1GE1 = (ALPHANULL + T1ge1) / (ALPHANULL + ALPHANULL + T1);
-                pGT0GE1 = (ALPHANULL + D0ge1 + D1ge1) / (ALPHANULL + ALPHANULL + nTumors - T1);
+                //pGT1GE1 = (ALPHANULL + T1ge1) / (ALPHANULL + ALPHANULL + T1);
+                //pGT0GE1 = (ALPHANULL + D0ge1 + D1ge1) / (ALPHANULL + ALPHANULL + nTumors - T1);
+                pGT1GE1 = (ALPHANULL + TE[3]) / (ALPHANULL + ALPHANULL + T[1]);
+                pGT0GE1 = (ALPHANULL + TDE[1] + TDE[3]) / (ALPHANULL + ALPHANULL + nTumors - T[1]);
             }
             else
             {
-                pGT1GE1 = (ALPHAIJK11 + T1ge1) / (ALPHAIJK11 + ALPHAIJK10 + T1);
-                pGT0GE1 = (ALPHAIJK01 + D0ge1 + D1ge1) / (ALPHAIJK01 + ALPHAIJK00 + nTumors - T1);                
+                //pGT1GE1 = (ALPHAIJK11 + T1ge1) / (ALPHAIJK11 + ALPHAIJK10 + T1);
+                //pGT0GE1 = (ALPHAIJK01 + D0ge1 + D1ge1) / (ALPHAIJK01 + ALPHAIJK00 + nTumors - T1);       
+                pGT1GE1 = (ALPHAIJK11 + TE[3]) / (ALPHAIJK11 + ALPHAIJK10 + T[1]);
+                pGT0GE1 = (ALPHAIJK01 + TDE[1] + TDE[3]) / (ALPHAIJK01 + ALPHAIJK00 + nTumors - T[1]);                      
             }
 
             // if(ge == 4)
@@ -257,6 +293,9 @@ void TDIC(GTMatrix& gtMatrix, TDIMatrix& geMatrix, map<string,
 
     delete [] tumorPosteriorMatrix;
 }
+
+
+
 
 /**
  * This function parse the text file that list top 2 global drivers for each of 

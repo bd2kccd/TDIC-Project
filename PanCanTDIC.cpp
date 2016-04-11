@@ -101,10 +101,19 @@ void PanCanTDIC(PanCanGTMatrix& gtMatrix, TDIMatrix& geMatrix, map<string,
         // loop through each GT in the tumor
         for (unsigned int gt = 0; gt < nGT; gt++)
         {
-            //cout << "GT iteration: " << gt << "\n";
-            // statistics associated with current T and global driver only 
-            float T1 = 0.0,   T1ge1 = 0.0, T1ge0 = 0.0, T0 = 0.0, T0ge1 = 0.0, T0ge0 = 0.0; 
-            float D1 = 0.0,   D1ge1 = 0.0, D1ge0 = 0.0, D0 = 0.0, D0ge1 = 0.0, D0ge0 = 0.0;
+            
+            //Variables to save the count NOT considering the cancel type
+            float T[2] = {0.0};
+            float TE[4] = {0.0};
+            float TD[4] = {0.0};
+            float TDE[8] = {0.0};
+
+            //Variables to save the count considering the cancel type
+            float CT[4] = {0.0};
+            float CTE[8] = {0.0};
+            float CTD[8] = {0.0};
+            float CTDE[16] = {0.0};
+            
             
             int curGTIndx = tumorGtIndices[gt];
 
@@ -112,97 +121,215 @@ void PanCanTDIC(PanCanGTMatrix& gtMatrix, TDIMatrix& geMatrix, map<string,
             
             for(int t = 0; t < nTumors; t++)
             {
+                
                 int compCanType = gtMatrix.getCanTypeByTumorId(t);
-                int NotTheSameCanType = (tumorCanType != compCanType);
+                int theSameCanType = (tumorCanType == compCanType);//if cancer type is the same, the value = 1
                 
+                int tVal = gtDataMatrix[gtRowStart + t];
+                int eVal = geDataMatrix[rowStartForGE + t];
+                int dVal = gtDataMatrix[rowStartForGlobDriver + t];
                 
-                // The following code copied from original TDIC.cpp. This needs to add cancel type options. Not complete yet
+                //count while NOT considering cancel type
+                T[tVal]++;
+                TE[tVal*2+eVal]++;
+                TD[tVal*2+dVal]++;
+                TDE[tVal*4+dVal*2+eVal]++;
                 
-                
-                
-                
-                
-                //if GT = 1 at current tumor, update stats for GT = 1 
-                if(gtDataMatrix[gtRowStart + t] == 1)
-                {   
-                    T1++;
-                    if(geDataMatrix[rowStartForGE + t] == 1) //
-                    {
-                        T1ge1++;
-                    }
-                    else
-                    {
-                        T1ge0++;
-                    }
-                }
-
-                //if GT != 1, we use the global driver and collect stats for globalDriver = 1
-                else
-                {
-                    if(gtDataMatrix[rowStartForGlobDriver + t] == 1) 
-                    {
-                        D1++;
-                        if(geDataMatrix[rowStartForGE + t] == 1) //
-                        {
-                            D1ge1++;
-                        }
-                        else
-                        {
-                            D1ge0++;
-                        }
-                    }
-                    else
-                    {
-                        D0++;
-                        if(geDataMatrix[rowStartForGE + t] == 1)
-                        {
-                            D0ge1++;
-                        }
-                        else
-                        {
-                            D0ge0++;
-                        }
-                    }
-                } 
+                //count considering cancel type                
+                CT[theSameCanType*2+tVal]++;
+                CTE[theSameCanType*4+tVal*2+eVal]++;
+                CTD[theSameCanType*4+tVal*2+dVal]++;
+                CTDE[theSameCanType*8+tVal*4+dVal*2+eVal]++;
             }
-
-            float TFscore;
+            
+            //There is no count for T0
+            T[0] = 0.0; 
+            //Therr is no count for T0ge0, T0ge1
+            TE[0]=TE[1] = 0.0;
+            //There is no count for C0T0, C1T0
+            CT[0] = CT[2] = 0.0;
+            //There is no count for C0T0E0, C0T0E1 C1TOE0 C1T0E1
+            CTE[0] = CTE[1] = CTE[4] = CTE[5] = 0.0;
+            
+               
+            
+            float TFscore ;
+            float DFscore ;
+            float pGT1GE1 ;
+            float pGT0GE1 ;
+            
+           /*
+            * Calculate lnData NOT considering cancer type 
+            */
+            
+            float lnData = 0.0;
+            
+     
             if(curGTIndx == 0)
             {
-                TFscore = calcA0Fscore(T1,  T1ge1, T1ge0, T0,  T0ge1, T0ge0);
+                //TFscore = calcA0Fscore(T1,  T1ge1, T1ge0, T0,  T0ge1, T0ge0);
+                TFscore = calcA0Fscore(T[1],  TE[3], TE[2], T[0],  TE[1], TE[0]);
             }
             else 
             {
-                TFscore = calcFscore( T1,  T1ge1, T1ge0, T0,  T0ge1, T0ge0 );
+                //TFscore = calcFscore( T1,  T1ge1, T1ge0, T0,  T0ge1, T0ge0 );
+                TFscore = calcFscore( T[1],  TE[3], TE[2], T[0],  TE[1], TE[0] );
             }
 
-            float DFscore = calcFscore( D1, D1ge1, D1ge0, D0, D0ge1, D0ge0 );
+            //float DFscore = calcFscore( D1, D1ge1, D1ge0, D0, D0ge1, D0ge0 );
+            DFscore = calcFscore( TD[1], TDE[3], TDE[2], TD[0], TDE[1], TDE[0] );
 
-            float lnData = TFscore + DFscore + lntumorMutPriors[gt];
+            lnData = TFscore + DFscore + lntumorMutPriors[gt];
 
-            tumorPosteriorMatrix[gt * nGE + ge] = lnData;
-
-            float pGT1GE1, pGT0GE1;
+            //tumorPosteriorMatrix[gt * nGE + ge] = lnData;    Comment out for cancel type calculation; Not ready to save yet. Save lnData at the last step
             if(gt == 0)
             {
-                pGT1GE1 = (ALPHANULL + T1ge1) / (ALPHANULL + ALPHANULL + T1);
-                pGT0GE1 = (ALPHANULL + D0ge1 + D1ge1) / (ALPHANULL + ALPHANULL + nTumors - T1);
+                //pGT1GE1 = (ALPHANULL + T1ge1) / (ALPHANULL + ALPHANULL + T1);
+                //pGT0GE1 = (ALPHANULL + D0ge1 + D1ge1) / (ALPHANULL + ALPHANULL + nTumors - T1);
+                pGT1GE1 = (ALPHANULL + TE[3]) / (ALPHANULL + ALPHANULL + T[1]);
+                pGT0GE1 = (ALPHANULL + TDE[1] + TDE[3]) / (ALPHANULL + ALPHANULL + nTumors - T[1]);
             }
             else
             {
-                pGT1GE1 = (ALPHAIJK11 + T1ge1) / (ALPHAIJK11 + ALPHAIJK10 + T1);
-                pGT0GE1 = (ALPHAIJK01 + D0ge1 + D1ge1) / (ALPHAIJK01 + ALPHAIJK00 + nTumors - T1);                
+                //pGT1GE1 = (ALPHAIJK11 + T1ge1) / (ALPHAIJK11 + ALPHAIJK10 + T1);
+                //pGT0GE1 = (ALPHAIJK01 + D0ge1 + D1ge1) / (ALPHAIJK01 + ALPHAIJK00 + nTumors - T1);       
+                pGT1GE1 = (ALPHAIJK11 + TE[3]) / (ALPHAIJK11 + ALPHAIJK10 + T[1]);
+                pGT0GE1 = (ALPHAIJK01 + TDE[1] + TDE[3]) / (ALPHAIJK01 + ALPHAIJK00 + nTumors - T[1]);                      
             }
 
-            // if(ge == 4)
-            // {
-            //     cout << "GT1GE1: " << pGT1GE1 << " GT0GE1: " << pGT0GE1 << " T0ge1: " << T0ge1 << "\n";
-
-            // }
             if(pGT1GE1 <= pGT0GE1)
             {
-                tumorPosteriorMatrix[gt* nGE + ge] = -FLT_MAX;
+                //tumorPosteriorMatrix[gt* nGE + ge] = -FLT_MAX;      Changed for cancel type calculation. Save lnData at the last step
+                lnData = -FLT_MAX;
             }
+            
+           /*
+            *Calculate lnData while cancel types are the same, save the lnData into lnDataC1
+            */
+ 
+            float lnDataC1 = 0.0;
+            if(curGTIndx == 0)
+            {
+                //TFscore = calcA0Fscore(T1,   T1ge1,  T1ge0,   T0,   T0ge1,  T0ge0);
+                //corresponding to      C1T1,  C1T1E1, C1T1E0, C1T0,  C1T0E1, C1T0E0
+                //corresponding to      CT[3]] CTE[7]  CTE[6]  CT[2]] CTE[5]  CTE[4]]
+                //TFscore = calcA0Fscore(T[1],  TE[3], TE[2], T[0],  TE[1], TE[0]);
+                TFscore = calcA0Fscore(CT[3],  CTE[7], CTE[6], CT[2],  CTE[5], CTE[4]);
+            }
+            else 
+            {
+                //TFscore = calcFscore( T1,  T1ge1, T1ge0, T0,  T0ge1, T0ge0 );
+                TFscore = calcFscore( CT[3],  CTE[7], CTE[6], CT[2],  CTE[5], CTE[4] );
+            }
+
+            //float DFscore = calcFscore( D1,     D1ge1,    D1ge0,     D0,     D0ge1,     D0ge0 );
+            //corresponding to           C1T0D1  C1T0D1E1  C1T0D1E0   C1T0D0   C1T0D0E1   C1T0D0E0
+            //corresponding to           CTD[5]  CTDE[11]  CTDE[10]   CTD[4]   CTDE[9]    CTDE[8]
+            //DFscore = calcFscore( TD[1], TDE[3], TDE[2], TD[0], TDE[1], TDE[0] );
+            DFscore = calcFscore( CTD[5], CTDE[11], CTDE[10], CTD[4], CTDE[9], CTDE[8] );
+            
+            lnDataC1 = TFscore + DFscore + lntumorMutPriors[gt];
+
+            //tumorPosteriorMatrix[gt * nGE + ge] = lnData;    Comment out for cancel type calculation; Not ready to save yet. Save lnData at the last step
+            
+            if(gt == 0)
+            {
+                //pGT1GE1 = (ALPHANULL + T1ge1) / (ALPHANULL + ALPHANULL + T1);
+                //pGT0GE1 = (ALPHANULL + D0ge1 + D1ge1) / (ALPHANULL + ALPHANULL + nTumors - T1);
+                
+                //pGT1GE1 = (ALPHANULL + TE[3]) / (ALPHANULL + ALPHANULL + T[1]);
+                //pGT0GE1 = (ALPHANULL + TDE[1] + TDE[3]) / (ALPHANULL + ALPHANULL + nTumors - T[1]);
+                pGT1GE1 = (ALPHANULL + CTE[7]) / (ALPHANULL + ALPHANULL + CT[3]);
+                pGT0GE1 = (ALPHANULL + CTDE[9] + CTDE[11]) / (ALPHANULL + ALPHANULL + nTumors - CT[3]);
+            }
+            else
+            {
+                //pGT1GE1 = (ALPHAIJK11 + T1ge1) / (ALPHAIJK11 + ALPHAIJK10 + T1);
+                //pGT0GE1 = (ALPHAIJK01 + D0ge1 + D1ge1) / (ALPHAIJK01 + ALPHAIJK00 + nTumors - T1);   
+                
+                //pGT1GE1 = (ALPHAIJK11 + TE[3]) / (ALPHAIJK11 + ALPHAIJK10 + T[1]);
+                //pGT0GE1 = (ALPHAIJK01 + TDE[1] + TDE[3]) / (ALPHAIJK01 + ALPHAIJK00 + nTumors - T[1]);         
+                pGT1GE1 = (ALPHAIJK11 + CTE[7]) / (ALPHAIJK11 + ALPHAIJK10 + CT[3]);
+                pGT0GE1 = (ALPHAIJK01 + CTDE[9] + CTDE[11]) / (ALPHAIJK01 + ALPHAIJK00 + nTumors - CT[3]);         
+            }
+         
+            if(pGT1GE1 <= pGT0GE1)
+            {
+                //tumorPosteriorMatrix[gt* nGE + ge] = -FLT_MAX;      Changed for cancel type calculation. Save lnData at the last step
+                lnDataC1 = -FLT_MAX;
+            }
+            
+            
+            /*
+            *Calculate lnData while cancel types are NOT the same, save the lnData into lnDataC0
+            */
+ 
+            float lnDataC0 = 0.0;
+            if(curGTIndx == 0)
+            {
+                //TFscore = calcA0Fscore(T1,   T1ge1,  T1ge0,   T0,   T0ge1,  T0ge0);
+                //corresponding to      C0T1,  C0T1E1, C0T1E0, C0T0,  C0T0E1, C0T0E0
+                //corresponding to      CT[1]] CTE[3]  CTE[2]  CT[0]] CTE[1]  CTE[0]]
+                //TFscore = calcA0Fscore(T[1],  TE[3], TE[2], T[0],  TE[1], TE[0]);
+                TFscore = calcA0Fscore(CT[1],  CTE[3], CTE[2], CT[0],  CTE[1], CTE[0]);
+            }
+            else 
+            {
+                //TFscore = calcFscore( T1,  T1ge1, T1ge0, T0,  T0ge1, T0ge0 );
+                TFscore = calcFscore( CT[1],  CTE[3], CTE[2], CT[0],  CTE[1], CTE[0] );
+            }
+
+            //float DFscore = calcFscore( D1,     D1ge1,    D1ge0,     D0,     D0ge1,     D0ge0 );
+            //corresponding to           C0T0D1  C0T0D1E1  C0T0D1E0   C0T0D0   C0T0D0E1   C0T0D0E0
+            //corresponding to           CTD[1]  CTDE[3]  CTDE[2]   CTD[0]   CTDE[1]    CTDE[0]
+            //DFscore = calcFscore( TD[1], TDE[3], TDE[2], TD[0], TDE[1], TDE[0] );
+            DFscore = calcFscore( CTD[1], CTDE[3], CTDE[2], CTD[0], CTDE[1], CTDE[0] );
+            
+            lnDataC0 = TFscore + DFscore + lntumorMutPriors[gt];
+
+            //tumorPosteriorMatrix[gt * nGE + ge] = lnData;    Comment out for cancel type calculation; Not ready to save yet. Save lnData at the last step
+            
+            if(gt == 0)
+            {
+                //pGT1GE1 = (ALPHANULL + T1ge1) / (ALPHANULL + ALPHANULL + T1);
+                //pGT0GE1 = (ALPHANULL + D0ge1 + D1ge1) / (ALPHANULL + ALPHANULL + nTumors - T1);
+                
+                //pGT1GE1 = (ALPHANULL + TE[3]) / (ALPHANULL + ALPHANULL + T[1]);
+                //pGT0GE1 = (ALPHANULL + TDE[1] + TDE[3]) / (ALPHANULL + ALPHANULL + nTumors - T[1]);
+                pGT1GE1 = (ALPHANULL + CTE[3]) / (ALPHANULL + ALPHANULL + CT[1]);
+                pGT0GE1 = (ALPHANULL + CTDE[1] + CTDE[3]) / (ALPHANULL + ALPHANULL + nTumors - CT[1]);
+            }
+            else
+            {
+                //pGT1GE1 = (ALPHAIJK11 + T1ge1) / (ALPHAIJK11 + ALPHAIJK10 + T1);
+                //pGT0GE1 = (ALPHAIJK01 + D0ge1 + D1ge1) / (ALPHAIJK01 + ALPHAIJK00 + nTumors - T1);   
+                
+                //pGT1GE1 = (ALPHAIJK11 + TE[3]) / (ALPHAIJK11 + ALPHAIJK10 + T[1]);
+                //pGT0GE1 = (ALPHAIJK01 + TDE[1] + TDE[3]) / (ALPHAIJK01 + ALPHAIJK00 + nTumors - T[1]);         
+                pGT1GE1 = (ALPHAIJK11 + CTE[3]) / (ALPHAIJK11 + ALPHAIJK10 + CT[1]);
+                pGT0GE1 = (ALPHAIJK01 + CTDE[1] + CTDE[3]) / (ALPHAIJK01 + ALPHAIJK00 + nTumors - CT[1]);         
+            }
+         
+            if(pGT1GE1 <= pGT0GE1)
+            {
+                //tumorPosteriorMatrix[gt* nGE + ge] = -FLT_MAX;      Changed for cancel type calculation. Save lnData at the last step
+                lnDataC0 = -FLT_MAX;
+            }
+            
+            //to test all the same cancel type in PanCanMatrix
+            if (DFscore == 0 and TFscore == 0)
+                lnDataC0 = - FLT_MAX;
+            //test end
+
+            
+            float lnDataLogSum ;
+            lnDataLogSum = logSum(lnDataC0, lnDataC1);
+            lnDataLogSum = logSum(lnDataLogSum, lnData );
+            
+             
+            //save lnDataLogSum
+            tumorPosteriorMatrix[gt* nGE + ge] = lnDataLogSum; 
+    
         }
 
         for(unsigned int gt = 0; gt < nGT; gt++)
