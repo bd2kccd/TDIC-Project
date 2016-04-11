@@ -7,10 +7,11 @@
 #include <ctype.h>
 #include <fstream>
 #include <omp.h>
-
-#include "TDIMatrix.h"
 #include "TDIC.h"
-#include "GTMatrix.h"
+#include "PanCanTDIC.h"
+//#include "TDIMatrix.h"
+//#include "GTMatrix.h"
+//#include "PanCanGTMatrix.h"
 
 
 using namespace std;
@@ -19,19 +20,26 @@ using namespace std;
 int main(int argc, char** argv) {
     
     // parse arguments 
-    extern char *optarg;
-    extern int optind, opterr, optopt;
+    //extern char *optarg;
+    //extern int optind, opterr, optopt;
     int rowStart = -1;
     int rowEnd = -1;
     int hasOpt;
-    string gtFilePath, globalDriverPath, degFilePath, outPath;
+    int nTumors;
+    GTMatrix* gtMatrix;
+    PanCanGTMatrix* panCanGtMatrix;
+    string gtFilePath, gtcFilePath, globalDriverPath, degFilePath, outPath;
 
-    while((hasOpt = getopt(argc, argv, "hs:e:f:d:g:o:")) != -1)
+    while((hasOpt = getopt(argc, argv, "hs:e:f:d:g:o:c:")) != -1)
     {
         switch(hasOpt)
         {
             case 'f':
                 gtFilePath = optarg;
+                break;
+                
+            case 'c':
+                gtcFilePath = optarg;
                 break;
 
             case 'd':
@@ -102,48 +110,85 @@ int main(int argc, char** argv) {
                 abort();
         }
     }
-
-        //read in GT and GE matrices
-    cout << "Reading GT matrix: " << gtFilePath << "\n";
-    GTMatrix* gtMatrix = new GTMatrix(gtFilePath);
-
-    float v0 = 0.1;
     
-    cout << "Reading GE matrix. " << degFilePath << "\n";
-    TDIMatrix* geMatrix = new TDIMatrix(degFilePath);
-   
-    cout << "Reading global driver file.\n";
-    map<string, string> globalDriverMap;
-    parseGlobDriverDict(globalDriverPath, globalDriverMap);
-
-    
-    int nTumors = gtMatrix->getNTumors();
-    
-    if(rowStart == -1)
-        rowStart = 0;
-    if(rowEnd == -1)
-        rowEnd = nTumors;
+ 
     
     if(rowStart > rowEnd)
     {
         cout << "Given rowEnd index is smaller than given rowStart. Exiting out.\n";
         exit(1);
     }
+
+    
+
+    if (!gtFilePath.empty() && !gtcFilePath.empty() )//input both GTMatrix and PanCanGTMatrix
+    {
+        //gtFileePath and gtcFilePath can not both exist, either process GTMatrix or PanCanGTMatrix
+        cerr << "Can not input both GtMatrix and PanCanGtMatrix\n";
+        exit(1);            
+    }
+    else if (gtFilePath.empty() && gtcFilePath.empty() )
+     {
+        //both gtFileePath and gtcFilePath not exist
+        cerr << "Must input GtMatrix or PanCanGtMatrix \n";
+        exit(1);            
+    }    
+    else if (!gtFilePath.empty()) //input GTMatrix
+    {           //read in GT matrices
+        cout << "Reading GT matrix: " << gtFilePath << "\n";
+        gtMatrix = new GTMatrix(gtFilePath);
+        nTumors = gtMatrix->getNTumors();
+    }
+    else //input PanCanGTMatrix
+    {   cout << "Reading PanCanGT matrix: " << gtcFilePath << "\n";
+        panCanGtMatrix = new PanCanGTMatrix(gtcFilePath);
+        nTumors = panCanGtMatrix->getNTumors();
+    }   
+     
+ 
+    //read in GE matrices
+       
+    cout << "Reading GE matrix. " << degFilePath << "\n";
+    TDIMatrix* geMatrix = new TDIMatrix(degFilePath);
+   
+    cout << "Reading global driver file.\n";
+    map<string, string> globalDriverMap;
+    parseGlobDriverDict(globalDriverPath, globalDriverMap);
+    
+    if(rowStart == -1)
+        rowStart = 0;
+    if(rowEnd == -1)
+        rowEnd = nTumors;
+
     //tumorNames = gtMatrix->getTumorNames();
     vector<int> outGlobDriverIndx;
 
     // check use gpu flag, if yes branch out to TCIGPU(GTmatrix, DEG, Glog)
     
     #pragma omp parallel for
-    for(int i = rowStart; i < rowEnd; i++)
+    float v0 = 0.1;
+    if (!gtFilePath.empty())//process GTMatrix
     {
-        if (i % 50 == 0)
-            printf("TDIC processed %d tumors.\n", i);
-        TDIC(*gtMatrix, *geMatrix, globalDriverMap, i, outPath, v0);
+        for(int i = rowStart; i < rowEnd; i++)
+        {
+            if (i % 50 == 0)
+                printf("TDIC processed %d tumors.\n", i);
+            TDIC(*gtMatrix, *geMatrix, globalDriverMap, i, outPath, v0);
+        }
+        delete gtMatrix;
     }
-    
-    delete geMatrix;
-    delete gtMatrix;   
+    else//process PanCanGTMatrix
+    {
+        for(int i = rowStart; i < rowEnd; i++)
+        {
+            if (i % 50 == 0)
+                printf("TDIC processed %d tumors.\n", i);
+            PanCanTDIC(*panCanGtMatrix, *geMatrix, globalDriverMap, i, outPath, v0);
+        }
+        delete panCanGtMatrix;
+    }
+      
+    delete geMatrix;  
 
     return 0;
 }

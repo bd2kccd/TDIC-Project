@@ -17,7 +17,7 @@ public:
     virtual ~GTMatrix();
     void calcLnTumorPriors(vector<int>& gtIndx, const float v0, vector<float>& lnTumorPriorAlphas);
     void load(string fileName);
-private:
+protected:
     void calcGlobalAlphaPriors();
     float* allAlphaPriors;
 

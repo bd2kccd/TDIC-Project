@@ -11,7 +11,7 @@ using namespace std;
 #include <vector>
 #include <string>
 
-#include "TDIMatrix.h"
+//#include "TDIMatrix.h"
 #include "GTMatrix.h"
 
 #ifndef TDIC_H

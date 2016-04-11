@@ -100,6 +100,8 @@ void TDIMatrix::getTumorIndicesByNames(vector<string>& inGeneNames, vector<int>&
  * @param outGeneIndices corresponding indeces for the genes in "inGeneNames"
  */
 void TDIMatrix::getGeneIndicesByNames(vector<string>& inGeneNames, vector<int>& outGeneIndx){
+    
+    
     for(int i = 0; i < inGeneNames.size(); i++)
     {
         int count = 0;
@@ -195,6 +197,7 @@ void TDIMatrix::load(string fileName)
             continue;
         }
         geneNames.push_back(tmp);
+
         //geneIndxMap.insert(std::pair<string, int>(tmp, nCol));
         nCol++;
     }
@@ -212,6 +215,8 @@ void TDIMatrix::load(string fileName)
             {
                 firstColFlag = false;
                 tumorNames.push_back(tmp);
+                
+ 
                 matrixAsVec.push_back(new int[nCol]);
                 continue;
             }

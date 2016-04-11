@@ -7,7 +7,7 @@
 
 #include <math.h>
 
-#include "TDIMatrix.h"
+//#include "TDIMatrix.h"
 #include "GTMatrix.h"
 
 using namespace std;
@@ -117,7 +117,7 @@ void GTMatrix::load(string fileName){
         inFileStream.open(fileName.c_str());
         if ( (inFileStream.rdstate() & std::ifstream::failbit ) != 0 )
         {
-            std::cerr << "Error opening file when loading TDI matrix, quit.\n";
+            std::cerr << "Error opening file when loading GT matrix, quit.\n";
             inFileStream.close();
             exit(EXIT_FAILURE);
         }
@@ -144,9 +144,36 @@ void GTMatrix::load(string fileName){
                 continue;
         }
         geneNames.push_back(tmp);
+  
+        
         //geneIndxMap.insert(std::pair<string, int>(tmp, nCol));
         nCol ++;
     }
+    
+    //User may accidently input GTMatrix as PanCanGTMatrix, so check the input file is actual GTMatrix
+    //Check the last column to see if the column name is something like 'Cancel Type', if it is , then exit program
+    // Cancel type column name can be 'Cancer Type' or 'Cancel Types' or 'Can Type' or 'Can Types' . 
+    //There can be no or more space between each word. Each character in the word is not case sensitive, can be lower or upper case.
+    
+    
+    
+    string colName;
+    colName = geneNames.back();
+    //Convert to lower case
+    transform(colName.begin(), colName.end(), colName.begin(), ::tolower);
+    //remove all spaces
+    colName.erase(remove(colName.begin(), colName.end(), ' '), colName.end());
+
+    if (colName == "cancertype" || colName == "cancertypes" || colName == "cantype" ||colName == "cantypes")//correct column name
+    {
+        //last column is cancel type not gene name
+        cout << "Input PanCanGTMatrix after -f parameter";
+        exit(1);
+    }
+    
+    
+    
+    
 
     while (getline(inFileStream, line)){
         firstColFlag = true; 

@@ -1,14 +1,15 @@
 /* 
- * File:   TDIC.cpp
- * Author: Kevin Lu
+ * File:   PanCanTDIC.cpp
+ *
  * 
- * Created on April 25, 2015, 6:13 PM
+ * 
  */
 
-
-#include "TDIC.h"
+//#include "TDIC.h"
+#include "PanCanTDIC.h"
 //#include "TDIMatrix.h"
 //#include "GTMatrix.h"
+//#include "PanCanGTMatrix.h"
 #include <fstream>
 #include <math.h>
 #include <iostream>
@@ -33,10 +34,11 @@ using namespace std;
                                 vector<string> containing the two 2 global driver.  
  * @param tumorID               The tumor to be process
  */
-void TDIC(GTMatrix& gtMatrix, TDIMatrix& geMatrix, map<string, 
+void PanCanTDIC(PanCanGTMatrix& gtMatrix, TDIMatrix& geMatrix, map<string, 
         string>& mapGlobDrivers, const int tumorID, const string outPath, const float v0){
     // initializations 
  
+    int tumorCanType = gtMatrix.getCanTypeByTumorId(tumorID);
     string curTumorName = gtMatrix.getTumorNameById(tumorID);
    
     // Find the GTs and GEs of the current tumor
@@ -110,6 +112,16 @@ void TDIC(GTMatrix& gtMatrix, TDIMatrix& geMatrix, map<string,
             
             for(int t = 0; t < nTumors; t++)
             {
+                int compCanType = gtMatrix.getCanTypeByTumorId(t);
+                int NotTheSameCanType = (tumorCanType != compCanType);
+                
+                
+                // The following code copied from original TDIC.cpp. This needs to add cancel type options. Not complete yet
+                
+                
+                
+                
+                
                 //if GT = 1 at current tumor, update stats for GT = 1 
                 if(gtDataMatrix[gtRowStart + t] == 1)
                 {   
@@ -257,236 +269,3 @@ void TDIC(GTMatrix& gtMatrix, TDIMatrix& geMatrix, map<string,
 
     delete [] tumorPosteriorMatrix;
 }
-
-/**
- * This function parse the text file that list top 2 global drivers for each of 
- * DEGs observed in a DEG matrix. 
- * @param A string fileName
- * @return A boolean value indicating the success  
- */
-bool parseGlobDriverDict(string fileName, map<string, string>& globDriverMap){
-    ifstream inFileStream;
-    string line;
-    vector<string> fields;
-    
-    try {
-        inFileStream.open(fileName.c_str()); 
- 
-        while(getline(inFileStream, line))
-        {
-              fields = split(line, ',');
-              globDriverMap.insert(std::pair<string, string>(fields.at(0), fields.at(1)));
-        }
-        inFileStream.close();
-    }
-    catch (ifstream::failure e) {
-        cout << "Fail to open file " << fileName;
-        return false;
-    } 
-    
-    return true;    
-    
-}
-
-/**
- * Split a string by a given delimiter.
- * @param s String to be split.
- * @param delim Single character delimiter by which to split the string.
- * @param elems List containing each split substring of 's' split by 'delim'.
- * @return 
- */
-std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
-    std::stringstream ss(s);
-    std::string item;
-    while (std::getline(ss, item, delim)) {
-        elems.push_back(item);
-    }
-    return elems;
-}
-
-/**
- * This split function calls '&split'. User calls this function.
- * @param s String to be split by 'delim'.
- * @param delim Character delimiter to split the string 's'.
- * @return List of substrings resulting from the split.
- */
-std::vector<std::string> split(const std::string &s, char delim) {
-    std::vector<std::string> elems;
-    split(s, delim, elems);
-    return elems;
-}
-
-
-/**
- * 
- * @param gtMat GT matr
- * @param geMat
- * @param mapGlobDrivers
- * @param inDEGIndices
- * @param OutGlobDriverVec
- * @return 
- */
-
-bool getDEGGlobDriverIndices(GTMatrix& gtMat, TDIMatrix& geMat, map<string, string>& mapGlobDrivers, vector<int>& inDEGIndices, vector<int>& OutGlobDriverVec)
-{
-    /*
-     * First we must get the names of the DEGs corresponding to the indices in "inDEGIndices".
-     * Then, using these DEG names, we can access their global driver through our map "mapGlobDrivers" 
-     * and push them onto 'OutGlobDriverVec'.
-     */
-    //cout << "Inside getDEGGlobDriver.\n";
-    vector<string> inDEGNames;
-    geMat.getGeneNamesByIndices(inDEGIndices, inDEGNames);
-
-    vector<string> globalDriverNames;
-    for(int i = 0; i < inDEGNames.size(); i++)
-    {
-        globalDriverNames.push_back(mapGlobDrivers[inDEGNames[i]]);
-    }
-    
-    gtMat.getGeneIndicesByNames(globalDriverNames, OutGlobDriverVec);
-    return true;
-}
-
-int getGlobDriver4GE(map<string, string>& mapGlobDrivers, int geId)
-{
-    return 0;
-}
-
-
-/********** logSum *********************************************************/ 
-/**
- * Evaluate Ln(x + y)
- * @param lnx ln(x)
- * @param lny ln(y)
- * @return ln(x + y)
- */
-float logSum(float lnx, float lny){
-    float maxExp = -4950.0;
-
-    if(lny > lnx){                
-        float tmp = lnx;
-        lnx = lny;
-        lny = tmp;
-    }
-
-    float lnyMinusLnX = lny - lnx;
-    float lnXplusLnY;
-
-    if(lnyMinusLnX < maxExp)
-        lnXplusLnY = lnx;
-    else
-        lnXplusLnY = log(1 + exp(lnyMinusLnX)) + lnx;
-
-    return (lnXplusLnY); 
-}
-
-
-/***************** calcSingleGtFscore  **************************************/
-/**
- * 
- * @param gt1 
- * @param gt1ge1
- * @param gt1ge0
- * @param gt0
- * @param gt0ge1
- * @param gt0ge0
- * @return 
- */
-float calcFscore(float gt1,  float gt1ge1, float gt1ge0, 
-    float gt0, float gt0ge1, float gt0ge0 )
-{
-    // Calculation of Equation 7    
-    float glnNi0 = lgamma(ALPHAIJK00 + ALPHAIJK01) - lgamma(gt0 + ALPHAIJK00 + ALPHAIJK01);
-    float glnNi1 = lgamma(ALPHAIJK10 + ALPHAIJK11) - lgamma(gt1 + ALPHAIJK10 + ALPHAIJK11);
-
-    float fscore = glnNi0 + glnNi1;   
-    fscore += lgamma(gt0ge0 + ALPHAIJK00) - lgamma(ALPHAIJK00);
-    fscore += lgamma(gt0ge1 + ALPHAIJK01) - lgamma(ALPHAIJK01);
-    fscore += lgamma(gt1ge0 + ALPHAIJK10) - lgamma(ALPHAIJK10);
-    fscore += lgamma(gt1ge1 + ALPHAIJK11) - lgamma(ALPHAIJK11);
-
-    return (fscore);
-}
-
-
-/***************** calcSingleGtFscore  **************************************/
-/**
- * 
- * @param gt1
- * @param gt1ge1
- * @param gt1ge0
- * @param gt0
- * @param gt0ge1
- * @param gt0ge0
- * @return 
- */
-float calcA0Fscore(float gt1,  float gt1ge1, float gt1ge0, 
-    float gt0, float gt0ge1, float gt0ge0 )
-{
-
-    // Calculation of Equation 7    
-    float glnNi0 = lgamma( ALPHANULL + ALPHANULL) - lgamma(gt0 + ALPHANULL + ALPHANULL);
-    float glnNi1 = lgamma(ALPHAIJK10 + ALPHANULL) - lgamma(gt1 + ALPHANULL + ALPHANULL);
-
-    float fscore = glnNi0 + glnNi1;   
-    fscore += lgamma(gt0ge0 + ALPHANULL) - lgamma(ALPHANULL);
-    fscore += lgamma(gt0ge1 + ALPHANULL) - lgamma(ALPHANULL);
-    fscore += lgamma(gt1ge0 + ALPHANULL) - lgamma(ALPHANULL);
-    fscore += lgamma(gt1ge1 + ALPHANULL) - lgamma(ALPHANULL);
-
-    return (fscore);
-}
-
-/**
- * 
- * @param gtm 
- * @param gem
- * @param nTumors
- * @param gtIndx
- * @param nGT
- * @param geIndx
- * @return 
- */
-float calcFscoreMultGT(int* gtm, int* gem, const int nTumors,  const int* gtIndx, const unsigned int nGT, const int geIndx)
-{
-    int parentCombinationCounts[2 ^ nGT];
-    int parentAndChildCombinationCounts[2 ^ (nGT + 1)];
-    
-    unsigned int geRowStart = geIndx * nTumors; 
-    unsigned int gtRowStarts[nGT];
-    for (int i = 0; i < nGT; i++)
-    {
-        gtRowStarts[i] = nTumors * gtIndx[i];
-    }
-    
-    for(int i = 0; i < nTumors; i++)
-    {
-        int slot = 0;
-        for(int j = 0; j < nGT; j++)
-        {
-            slot = slot * 2 + gtm[gtRowStarts[j] + i];
-        }
-        parentCombinationCounts[slot]++;
-        slot = slot * 2 + gem[geRowStart + i];
-        parentAndChildCombinationCounts[slot]++;
-    }
-    
-    // calculate Equation 7'.3
-    float res = 0;
-    for (int j = 0; j < 2 ^ nGT; j++)
-    {
-        res += lgamma(ALPHAIJK00 + ALPHAIJK01) - lgamma(parentCombinationCounts[j] + ALPHAIJK00 + ALPHAIJK01);
-    }
-    
-    res += lgamma(parentAndChildCombinationCounts[0] + ALPHAIJK00) - lgamma(ALPHAIJK00);
-    res += lgamma(parentAndChildCombinationCounts[1] + ALPHAIJK01) - lgamma(ALPHAIJK01);
-    float myAlpha[2] = {1.0, 2.0};
-    for (int j = 2; j < 2 ^ (nGT + 1); j++)
-    {
-        res += lgamma(parentAndChildCombinationCounts[j] + myAlpha[j%2]) - lgamma(myAlpha[j%2]);
-    }
-    
-    return res;
-}
-
