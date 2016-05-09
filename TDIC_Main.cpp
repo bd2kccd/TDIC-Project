@@ -165,10 +165,11 @@ int main(int argc, char** argv) {
 
     // check use gpu flag, if yes branch out to TCIGPU(GTmatrix, DEG, Glog)
     
-    #pragma omp parallel for
+    
     float v0 = 0.1;
     if (!gtFilePath.empty())//process GTMatrix
     {
+        #pragma omp parallel for
         for(int i = rowStart; i < rowEnd; i++)
         {
             if (i % 50 == 0)
@@ -179,6 +180,7 @@ int main(int argc, char** argv) {
     }
     else//process PanCanGTMatrix
     {
+        #pragma omp parallel for
         for(int i = rowStart; i < rowEnd; i++)
         {
             if (i % 50 == 0)

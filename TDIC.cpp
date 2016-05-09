@@ -5,7 +5,7 @@
  * Created on April 25, 2015, 6:13 PM
  */
 
-
+using namespace std;
 #include "TDIC.h"
 //#include "TDIMatrix.h"
 //#include "GTMatrix.h"
@@ -13,14 +13,17 @@
 #include <math.h>
 #include <iostream>
 #include <fstream>
+#include <string.h>
+#include <string>
 #include <vector>
 #include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
 #include <float.h>
+#include <algorithm>
 
-using namespace std;
+
 /**
  * This function performs tumor-specific driver identification.  It calculate the causal score for all 
  * GT-vs-GE pairs observed in a given tumor, populate a GT-by-GE score matrix and output to file.  
@@ -78,7 +81,7 @@ void TDIC(GTMatrix& gtMatrix, TDIMatrix& geMatrix, map<string,
     vector<float> lntumorMutPriors;
     gtMatrix.calcLnTumorPriors(tumorGtIndices, v0, lntumorMutPriors);
 
-    float* tumorPosteriorMatrix = new float[nGT * nGE];
+    float* tumorPosteriorMatrix = new float[nGT * nGE]();
     
     
     // omp_set_dynamic(0);     // Explicitly disable dynamic teams
@@ -104,15 +107,10 @@ void TDIC(GTMatrix& gtMatrix, TDIMatrix& geMatrix, map<string,
             //float T1 = 0.0,   T1ge1 = 0.0, T1ge0 = 0.0, T0 = 0.0, T0ge1 = 0.0, T0ge0 = 0.0; 
             //float D1 = 0.0,   D1ge1 = 0.0, D1ge0 = 0.0, D0 = 0.0, D0ge1 = 0.0, D0ge0 = 0.0;
             
-            //T[0xT] T is the gt value
+            
             float T[2] = {0.0};
-            //TE[0xTE]] T is the gt value, E is the ge value
-            //eg. TE[3] means TE[0x11] save the count when T=1 and E=1
             float TE[4] = {0.0};
-            //TD[0xTD] T is the gt value, D is the global driver value
             float TD[4] = {0.0};
-            //TDE[0xTDE] T is the gt value, D is the global driver value, E is the ge value
-            //eg. TDE[7] means TDE[0x110] save the count when T=1 and D=1 and E=1
             float TDE[8] = {0.0};
             
             
@@ -125,13 +123,34 @@ void TDIC(GTMatrix& gtMatrix, TDIMatrix& geMatrix, map<string,
                 int tVal = gtDataMatrix[gtRowStart + t];
                 int eVal = geDataMatrix[rowStartForGE + t];
                 int dVal = gtDataMatrix[rowStartForGlobDriver + t];
+               
+//                // T, TE, TD can all be calculated from TDE
+//                   T[tVal]++; 
+//                   TE[tVal*2+eVal]++;
+//                   TD[tVal*2+dVal]++;  
                 
-                T[tVal]++;
-                TE[tVal*2+eVal]++;
-                TD[tVal*2+dVal]++;
+
+                //TDE[0xTDE] T is the gt value, D is the global driver value, E is the ge value
+                //e.g. TDE[7] means TDE[0x110] save the count when T=1 and D=1 and E=1
                 TDE[tVal*4+dVal*2+eVal]++;
             }
-                
+
+            //TD[0xTD] T is the gt value, D is the global driver value
+            //e.g. TD[2] means TD[ox10] save the count when T=1 D=0
+            TD[0] = TDE[0] + TDE[1]; //T0D0 = T0D0E0 + T0D0E1 
+            TD[1] = TDE[2] + TDE[3]; //T0D1 = T0D1E0 + T0D1E1
+            TD[2] = TDE[4] + TDE[5]; //T1D0 = T1D0E0 + T1D0E1 
+            TD[3] = TDE[6] + TDE[7]; //T0D1 = T1D1E0 + T1D1E1 
+            //TE[0xTE]] T is the gt value, E is the ge value
+            //e.g. TE[3] means TE[0x11] save the count when T=1 and E=1
+            TE[0] = TDE[0] + TDE[2]; //T0E0 = T0D0E0 + T0D1E0
+            TE[1] = TDE[1] + TDE[3]; //T0E1 = T0D0E1 + T0D1E1 
+            TE[2] = TDE[4] + TDE[6]; //T1E0 = T1D0E0 + T1D1E0
+            TE[3] = TDE[5] + TDE[7]; //T1E1 = T1D0E1 + T1D1E1
+            //T[0xT] T is the gt value
+            //e.g. T[1] save the count when gt value T = 1 
+            T[0] = TE[0] + TE[1]; //T0 = T0E0 + T0E1
+            T[1] = TE[2] + TE[3]; //T1 = T1E0 + T1E1  
               /*  
                 //if GT = 1 at current tumor, update stats for GT = 1 
                 if(gtDataMatrix[gtRowStart + t] == 1)
@@ -243,7 +262,16 @@ void TDIC(GTMatrix& gtMatrix, TDIMatrix& geMatrix, map<string,
         
         // finished populating a column of GTs with respect to a given GE, normalize so that the column sum to 1
         for (unsigned int gt = 0; gt < nGT; gt++)
-            tumorPosteriorMatrix[gt * nGE + ge] = exp(tumorPosteriorMatrix[gt * nGE + ge] - normalizer);     
+            tumorPosteriorMatrix[gt * nGE + ge] = exp(tumorPosteriorMatrix[gt * nGE + ge] - normalizer);  
+        
+        //for test only
+//        float sumT = 0.0;
+//        for (unsigned int gt = 0; gt < nGT; gt++)
+//            sumT += tumorPosteriorMatrix[gt * nGE + ge] ;
+//        if (fabs(sumT - 1) > 0.001)
+//            cout << "sumT != 1 in Gene " << geNames[ge] << " difference is " << sumT - 1 << "\n";
+        //test end
+        
     }
   
 
@@ -308,13 +336,17 @@ bool parseGlobDriverDict(string fileName, map<string, string>& globDriverMap){
     string line;
     vector<string> fields;
     
+   
     try {
         inFileStream.open(fileName.c_str()); 
  
         while(getline(inFileStream, line))
-        {
-              fields = split(line, ',');
-              globDriverMap.insert(std::pair<string, string>(fields.at(0), fields.at(1)));
+        {   
+            line.erase(std::remove(line.begin(), line.end(), '\n'), line.end()); //added 4/14/16
+            line.erase(std::remove(line.begin(), line.end(), '\r'), line.end()); //added 4/14/16
+            fields = split(line, ',');
+            globDriverMap.insert(std::pair<string, string>(fields.at(0), fields.at(1)));
+                
         }
         inFileStream.close();
     }
@@ -322,9 +354,7 @@ bool parseGlobDriverDict(string fileName, map<string, string>& globDriverMap){
         cout << "Fail to open file " << fileName;
         return false;
     } 
-    
-    return true;    
-    
+   
 }
 
 /**

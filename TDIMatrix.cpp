@@ -105,15 +105,21 @@ void TDIMatrix::getGeneIndicesByNames(vector<string>& inGeneNames, vector<int>& 
     for(int i = 0; i < inGeneNames.size(); i++)
     {
         int count = 0;
+        
+        int iFound = 0; //mxj
         for(int j = 0; j < geneNames.size(); j++)
         {
             count ++;
+            
             if(inGeneNames[i].compare(geneNames[j]) == 0)
             {
                 outGeneIndx.push_back(j);
+                iFound = 1; //mxj
                 break;
             }
         }
+        if (iFound == 0) //mxj
+            cout << "Gene " << inGeneNames[i] << " not found \n"; //mxj
     }
     if(inGeneNames.size() != outGeneIndx.size())
     {
@@ -217,7 +223,7 @@ void TDIMatrix::load(string fileName)
                 tumorNames.push_back(tmp);
                 
  
-                matrixAsVec.push_back(new int[nCol]);
+                matrixAsVec.push_back(new int[nCol]());
                 continue;
             }
 
@@ -231,7 +237,7 @@ void TDIMatrix::load(string fileName)
     
     // transform the vector of inter arrays to a consecutive array so that 
     // computation can be done efficiently
-    mat = new int[nCol * nRow];
+    mat = new int[nCol * nRow]();
     int indx = 0;    
     for (int g = 0; g < nCol; g++){
         for (int t = 0; t < nRow; t++){

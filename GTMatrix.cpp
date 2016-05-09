@@ -40,8 +40,9 @@ GTMatrix::~GTMatrix(){
  */
 void GTMatrix::calcGlobalAlphaPriors()
 {
+    
     //initialize alpha prior array
-    allAlphaPriors = new float[nGenes];
+    allAlphaPriors = new float[nGenes]();
     
     /*
      * Iterate through all tumors of the GTMatrix.
@@ -152,7 +153,7 @@ void GTMatrix::load(string fileName){
     
     //User may accidently input GTMatrix as PanCanGTMatrix, so check the input file is actual GTMatrix
     //Check the last column to see if the column name is something like 'Cancel Type', if it is , then exit program
-    // Cancel type column name can be 'Cancer Type' or 'Cancel Types' or 'Can Type' or 'Can Types' . 
+    // Cancel type column name can be 'Cancer Type' or 'Cancel Types' or 'Can Type' or 'Can Types' or 'Cancer Type Code' or 'CanType code'. 
     //There can be no or more space between each word. Each character in the word is not case sensitive, can be lower or upper case.
     
     
@@ -164,7 +165,8 @@ void GTMatrix::load(string fileName){
     //remove all spaces
     colName.erase(remove(colName.begin(), colName.end(), ' '), colName.end());
 
-    if (colName == "cancertype" || colName == "cancertypes" || colName == "cantype" ||colName == "cantypes")//correct column name
+    if (colName == "cancertype" || colName == "cancertypes" || colName == "cantype" ||colName == "cantypes" 
+            || colName == "cantypecode" || colName == "cancertypecode"|| colName == "cantypescode" || colName == "cancertypescode")
     {
         //last column is cancel type not gene name
         cout << "Input PanCanGTMatrix after -f parameter";
@@ -202,7 +204,7 @@ void GTMatrix::load(string fileName){
     // transform the vector of inter arrays to a consecutive array so that 
     // computation can be done efficiently
     int indx = 0;
-    mat = new int[(nCol+1) * nRow ];
+    mat = new int[(nCol+1) * nRow ]();
     for (int i = 0; i < nRow; i++)
     {
         mat[indx++] = 1;

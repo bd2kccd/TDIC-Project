@@ -109,7 +109,8 @@ void PanCanGTMatrix::load(string fileName){
     //remove all spaces
     colName.erase(remove(colName.begin(), colName.end(), ' '), colName.end());
 
-    if (colName == "cancertype" || colName == "cancertypes" || colName == "cantype" ||colName == "cantypes")//correct column name
+    if (colName == "cancertype" || colName == "cancertypes" || colName == "cantype" ||colName == "cantypes"
+            || colName == "cantypecode" || colName == "cancertypecode" || colName == "cantypescode" || colName == "cancertypescode")//correct column name
     {
         //last column is cancel type not gene name, so popback, nCol minus 1
         geneNames.pop_back();
@@ -131,7 +132,7 @@ void PanCanGTMatrix::load(string fileName){
                 {
                     firstColFlag = false;
                     tumorNames.push_back(tmp);
-                    matrixAsVec.push_back(new int[nCol]);
+                    matrixAsVec.push_back(new int[nCol]());
                     continue;
                 }
                 if(curCol != nCol)
@@ -153,7 +154,7 @@ void PanCanGTMatrix::load(string fileName){
     // transform the vector of inter arrays to a consecutive array so that 
     // computation can be done efficiently
     int indx = 0;
-    mat = new int[(nCol+1) * nRow ];
+    mat = new int[(nCol+1) * nRow ]();
     for (int i = 0; i < nRow; i++)
     {
         mat[indx++] = 1;
