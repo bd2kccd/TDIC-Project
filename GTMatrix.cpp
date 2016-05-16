@@ -77,7 +77,7 @@ void GTMatrix::calcLnTumorPriors(vector<int>& gtIndx, const float v0, vector<flo
 {
     float sumAlphaPrior = 0.0;
     
-    //calculate sum of priors to normalize the prior probability
+    //calculate sum of priors to normalize the prior findGeneWithOnesInTumor
     for(int gt = 0; gt < gtIndx.size(); gt++)
     {
         if(gtIndx[gt] == 0)
