@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
     time_t t_start,t_end;
     time (&t_start);
 
-    while((hasOpt = getopt(argc, argv, "hi:f:d:g:o:c:s:e:t:?")) != -1)
+    while((hasOpt = getopt(argc, argv, "hi:f:d:g:o:s:e:c:t:?")) != -1)
     {
         switch(hasOpt)
         {
@@ -190,14 +190,12 @@ int main(int argc, char** argv) {
     if(rowEnd < 1 || rowEnd > nTumors)
         rowEnd = nTumors;
 
-	if(rowStart > rowEnd)
+	if(rowStart >= rowEnd)
     {
-        cout << "Given rowEnd index is smaller than given rowStart. Exiting out.\n";
+        cout << "Given rowEnd index must bigger than given rowStart. Exiting out.\n";
         exit(1);
     }
         
-    
-//    cout<< "gtGeneName.size(), geGeneNames.size()"<<gtGeneNames.size()<<","<<geGeneNames.size()<<"\n";
     for (int i = rowStart; i< rowEnd; i++){
         // get gt/ge indices
         vector<int> gtGeneIndices, geGeneIndices;
@@ -233,6 +231,16 @@ int main(int argc, char** argv) {
 
     delete geMatrix;
  
+    time (&t_end);
+    long seconds = difftime (t_end,t_start);
+    
+    int hours, minutes;
+ 
+    minutes = seconds / 60;
+    hours = minutes / 60;
+    
+    cout <<  " Elasped time is  " << hours << " hours " << minutes%60 << " minutes " << seconds%60 << " seconds." << "\n";
+    
     return 0;
 }
 

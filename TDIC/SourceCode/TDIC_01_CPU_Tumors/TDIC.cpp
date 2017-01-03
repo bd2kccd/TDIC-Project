@@ -267,8 +267,6 @@ void TDIC_Output(vector<float>& tumorPosteriorMatrix, string curTumorName, vecto
         outFileName = outPath + curTumorName + ".csv";
     }
         
-
-    //ofstream file;
     ofstream outFile;
     try
     {
@@ -480,81 +478,27 @@ float calcA0Fscore(float gt1,  float gt1ge1, float gt1ge0,
 }
 
 /**
- * This function read in data input file, return SGA gene names, DEG gene names, and tumor name
- * @param inputFileName(in):  A string contains the name of the input file 
+ * This function read in data input file, cancer type coding table file,  return SGA gene names, DEG gene names, and tumor name of each tumor
+ * @param inputFileName(in):  A string contains the name of the customer tumor input file 
  *                       It is a txt file having 4 rows which shows as following. 
  *                       TumorID
  *                       CancerType
  *                       SGA genes list
  *                       DEG genes list
  * 
- * @geGetNames      a vector contains the input data gt gene names
- * @geGeneNames     a vector contains the input data ge gene  names      
- * @curTumorName    a string contains current tumor name              
+ * @geGetNames      a vector of a vector contains the input data gt gene names of each input tumor
+ * @geGeneNames     a vector of a vector contains the input data ge gene names of each input tumor      
+ * @TumorNames      a vector contains each tumor name  
+ * @tumorCanTypes   a vector contains cancer type of each tumor
+ * @cancerTypeTable a string which is the file name of the cancer type coding table for our TDIC. 
  */
-
-//void TDIC_Load(string inputFileName, vector<string>& gtGeneNames, vector<string>& geGeneNames, string& curTumorName)
-//{
-//    std::stringstream ss;
-//    std::string line;
-//    ifstream inFileStream;   
-// 
-//    try{
-//        inFileStream.open(inputFileName.c_str());
-//        if ( (inFileStream.rdstate() & std::ifstream::failbit ) != 0 )
-//        {
-//            std::cerr << "Error opening file when loading input files in TDICLoad load function, quit.\n";
-//            inFileStream.close();
-//            exit(EXIT_FAILURE);
-//        }
-//    }
-//    catch (...) { //std::ifstream::failure e
-//        cerr << "Fail to open file " << inputFileName;
-//        
-//    } 
-//            
-//    int rowInFile = 0;
-//    gtGeneNames.push_back("A0");
-//    while (getline(inFileStream, line)){
-//        if (!line.empty() && line[line.size() - 1] == '\r')
-//            line.erase(line.size() - 1);
-////        line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
-//        stringstream ss (line);
-//        string tmp;
-//        rowInFile ++;
-//        while (getline(ss, tmp, ',')){
-//            if (rowInFile == 1)//tumor iD
-//                curTumorName = tmp;
-//            else if (rowInFile == 2)//cancer type
-//            {
-//                //cancer type is not used in TDIC. need to discuss if it is necessary to pass in
-////                bool has_only_digits = (tmp.find_first_not_of( "0123456789" ) == string::npos);
-////                if (!has_only_digits)
-////                {
-////                    cerr << "Error: Input link file second line supposed to be a digit which is a cancer type/n";
-////                    exit(1);
-////                }
-////                cancerType = atoi(tmp.c_str());
-////                if (cancerType == 0)
-////                    hasCanType = false;
-//            }
-//            else if (rowInFile == 3)//SGA gene list
-//                gtGeneNames.push_back(tmp);
-//            else if (rowInFile ==4)//DEG gene list
-//                geGeneNames.push_back(tmp);
-//        }
-//    }
-//    inFileStream.close();   
-//    
-//
-//}
-
 void TDIC_Load(string inputFileName, vector< vector<string> >& gtGeneNames, vector< vector<string> >& geGeneNames, vector<string>& tumorNames, vector<int>& tumorCanTypes, string cancerTypeTable)
 {
     std::stringstream ss;
     std::string line;
     ifstream inFileStream;   
     
+    //Read in cancer type code table and saved in canTypeMap which is Cancer Type Name -> Code (1..16)
     try{
         inFileStream.open(cancerTypeTable.c_str());  
         if ( (inFileStream.rdstate() & std::ifstream::failbit ) != 0 )
@@ -591,6 +535,7 @@ void TDIC_Load(string inputFileName, vector< vector<string> >& gtGeneNames, vect
     inFileStream.close();
    
     
+    //Read in customer tumor input files
     try{
         inFileStream.open(inputFileName.c_str());  
         if ( (inFileStream.rdstate() & std::ifstream::failbit ) != 0 )
@@ -626,15 +571,9 @@ void TDIC_Load(string inputFileName, vector< vector<string> >& gtGeneNames, vect
 
         else if (rowInFile%4 == 2) {//cancer type
             
-//            bool has_only_digits = (tmp.find_first_not_of( "0123456789" ) == string::npos);
-//            if (!has_only_digits)
-//            {
-//                cerr << "Error: Input link file second line supposed to be a digit which is a cancer type/n";
-//                exit(1);
-//            }
             getline(ss, tmp, ',');
-            int canType = canTypeMap[tmp.c_str()];//if cancer type is not in our cancer type coding table, then map return 0
-            if (canType == 0){
+            int canType = canTypeMap[tmp.c_str()];
+            if (canType == 0){//if cancer type is not in our cancer type coding table, then map return 0
                 cerr << "Error: the name of cancer type " << tmp << " in the tumor input file is not correct./n";
                 exit(1);
             }
