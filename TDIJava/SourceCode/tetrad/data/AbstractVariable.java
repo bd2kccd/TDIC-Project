@@ -49,6 +49,27 @@ public abstract class AbstractVariable implements Variable {
     private String name = "??";
 
     /**
+     *Added for TDI   on 01/04/2017 by mxj
+     */
+    private String geneType = "??";
+    
+     /**
+     * return gene type
+     */
+    public String getGeneType() {
+        return geneType;
+    }
+
+    /**
+     * set gene type
+     */
+    public void setGeneType(String geneType) {
+        this.geneType = geneType;
+    }
+    //end
+    
+    
+    /**
      * Builds a variable having the specified name.
      */
     AbstractVariable(String name) {

@@ -59,6 +59,26 @@ public class Edge implements TetradSerializable, Comparable {
      */
     private Endpoint endpoint2;
 
+    /**
+     * Added for TDI on 01/04/17 by mxj
+     */
+    private int[] edgeScores = new int[4];
+
+    public int[] getEdgeScores() {
+        return edgeScores;
+    }
+
+    public void setEdgeScores(int[] edgeScores) {
+        this.edgeScores = edgeScores;
+    }
+    
+    public void setEdgeScores(int score00, int score01, int score10, int score11) {
+        this.edgeScores[0] = score00;
+        this.edgeScores[1] = score01;
+        this.edgeScores[2] = score10;
+        this.edgeScores[3] = score11;
+    }
+    //end
     //=========================CONSTRUCTORS============================//
 
     /**

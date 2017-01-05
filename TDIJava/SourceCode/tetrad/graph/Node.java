@@ -36,7 +36,16 @@ import java.beans.PropertyChangeListener;
  */
 public interface Node extends TetradSerializable, Comparable {
     long serialVersionUID = 23L;
-
+    
+    /**
+     * Added for TDI by mxj on 01/04/17 
+     */
+    String getGeneType();
+    
+    void setGeneType(String geneType);
+    //end
+    
+    
     /**
      * @return the name of the node.
      */
