@@ -100,7 +100,11 @@ int main(int argc, char** argv) {
                   cout << "Option -" << optopt << " requires an argument.\n";
                   return 0;          
                 }
-  
+                else if(optopt == 't')
+                {
+                  cout << "Option -" << optopt << " requires an argument.\n";
+                  return 0;          
+                }
                 else if(isprint(optopt))
                 {
                   cout << "Unknown option -" << optopt << ".\n";
@@ -141,6 +145,11 @@ int main(int argc, char** argv) {
     else if (globalDriverPath.empty())
     {
         cerr << "Must input global driver file\n";
+        exit(1);
+    }
+    else if (cancerTypeTable.empty())
+    {
+        cerr << "Must input cancer type coding file\n";
         exit(1);
     }
     else if (!gtFilePath.empty()) //input GTMatrix

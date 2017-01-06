@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
                 break;
 
             case 'h':
-                cerr << "Usage: TDIC -i inputData -c inputGtMatrix -d inputGeMatrix -g inputGlobDriverDictionary -o pathForOutputResults \n";
+                cerr << "Usage: TDIC -i inputData -c inputGtMatrix -d inputGeMatrix -g inputGlobDriverDictionary -o pathForOutputResults -t cancerTypeCodingTable\n";
                 exit(1);
                 break;
                 
@@ -97,6 +97,11 @@ int main(int argc, char** argv) {
                   return 0;          
                 }
                 else if(optopt == 'd')
+                {
+                  cout << "Option -" << optopt << " requires an argument.\n";
+                  return 0;          
+                }
+                else if(optopt == 't')
                 {
                   cout << "Option -" << optopt << " requires an argument.\n";
                   return 0;          
@@ -132,19 +137,24 @@ int main(int argc, char** argv) {
     else if (gtFilePath.empty() && gtcFilePath.empty() )//both gtFileePath and gtcFilePath not exist
      {
         
-        cerr << "Must input GtMatrix or PanCanGtMatrix \n";
+        cerr << "Must input GtMatrix or PanCanGtMatrix with -c of PanCanGtMatrix or -f with GtMatrix\n";
         exit(1);            
     }    
     else if (inputDataFile.empty() )
     {
-        cerr << "Must have input data file\n";
+        cerr << "Must have input data file with -i parameter\n";
         exit(1);
     }
     else if (globalDriverPath.empty())
     {
-        cerr << "Must input global driver file\n";
+        cerr << "Must input global driver file with -g parameter\n";
         exit(1);
     }
+     else if (!cancerTypeTable.empty())//coding table
+    {
+        cerr << "Must input cancer type coding table with -t parameter\n";
+        exit(1);
+     }
     else if (!gtFilePath.empty()) //input GTMatrix
     {          
         cerr << "Reading GT matrix: " << gtFilePath << "\n";
