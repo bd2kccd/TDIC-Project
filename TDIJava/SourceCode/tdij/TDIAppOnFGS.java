@@ -58,18 +58,19 @@ public class TdiAppOnFGS {
                 int scores[] = edge.getEdgeScores();
                 bf.write("Edge " + edge.toString() + " score are " + scores[3] + "," + scores[2] + "," + scores[1] + "," + scores[0] + "\r\n");
             }
+            
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         Node node = TDIgraph.getNode("D2");
-        if (node.getGeneType()== "SGA"){
+        if (node.getGeneType() == "SGA") {
             List<Node> children = TDIgraph.getChildren(node);
             for (Node child : children) {
                 System.out.println("Node " + node.getName() + "'child is " + child + "\n");
             }
-        }else{
+        } else {
             List<Node> parents = TDIgraph.getParents(node);
             for (Node parent : parents) {
                 System.out.println("Node " + node.getName() + "'parent is " + parent + "\n");
@@ -80,13 +81,10 @@ public class TdiAppOnFGS {
 
     public static Graph readData(String fileIn) {
 
-        int totalTumors = 8;
-        Map<String, Integer> mapSGAcount = new HashMap<String, Integer>();
-        Map<String, Integer> mapDEGcount = new HashMap<String, Integer>();
-        Map<String, Integer> mapSGAtoDEGcount = new HashMap<String, Integer>();
-        Set<String> pairSGATumor = new HashSet<String>();
-        Set<String> pairDEGTumor = new HashSet<String>();
-
+        int totalTumors = 4;
+        Map<String, Set<String> > mapSGATumors = new HashMap<String, Set<String> >();
+        Map<String, Set<String> > mapDEGTumors = new HashMap<String, Set<String> >();
+        Map<String, Set<String> > mapSGAtoDEGTumors = new HashMap<String, Set<String> >();
         //read in file and save strs, edges and counts
         try (BufferedReader br = new BufferedReader(new FileReader(fileIn))) {
             String sCurrentLine;
@@ -101,52 +99,37 @@ public class TdiAppOnFGS {
                     items = sCurrentLine.split(",");
                     String strSGA = items[0];
                     String strDEG = items[1];
-                    String strSGADEG = items[0] + "," + items[1];
+                    String strTumor = items[2];
+                    String strSGADEG = strSGA + "," + strDEG;
+                    
 
-                    //SGA and DEG both not new -> tumor must new, so edge+1, new SGA pair, new DEG pair, SGA count+1, DEG count+1
-                    if (mapSGAcount.containsKey(strSGA) && mapDEGcount.containsKey(strDEG)) {
-                        mapSGAtoDEGcount.put(strSGADEG, mapSGAtoDEGcount.get(strSGADEG) + 1);
-                        pairSGATumor.add(items[0] + items[2]);
-                        pairDEGTumor.add(items[1] + items[2]);
-                        mapSGAcount.put(strSGA, mapSGAcount.get(strSGA) + 1);
-                        mapDEGcount.put(strDEG, mapDEGcount.get(strDEG) + 1);
-                    } //SGA and DEG both new -> add edge, add SGApair, add DEGpair, add SGA str, add DEG str
-                    else if (!mapSGAcount.containsKey(strSGA) && !mapDEGcount.containsKey(strDEG)) {
-                        mapSGAtoDEGcount.put(strSGADEG, 1);
-                        pairSGATumor.add(items[0] + items[2]);
-                        pairDEGTumor.add(items[1] + items[2]);
-                        mapSGAcount.put(strSGA, 1);
-                        mapDEGcount.put(strDEG, 1);
-                    } //new SGA str and old DEG str  -> new SGAstrtumor pair, new edge
-                    // if DEGpair not exit -> add pair, DEG str count + 1
-                    else if (!mapSGAcount.containsKey(strSGA)) {
-                        //SGA related
-                        mapSGAcount.put(strSGA, 1);
-                        pairSGATumor.add(items[0] + items[2]);
-                        mapSGAtoDEGcount.put(strSGADEG, 1);
-                        //DEG related
-                        if (!pairDEGTumor.contains(items[1] + items[2])) {
-                            pairDEGTumor.add(items[1] + items[2]);
-                            mapDEGcount.put(strDEG, mapDEGcount.get(strDEG) + 1);
-                        }
-
-                    } //new DEG str and old SGA str -> new DEGstrtumor pair, new edge
-                    // if SGApair not exit -> add pair, SGA str count + 1
-                    else if (!mapDEGcount.containsKey(strDEG)) {
-                        //DEG related
-                        mapDEGcount.put(strDEG, 1);
-                        pairDEGTumor.add(items[1] + items[2]);
-                        mapSGAtoDEGcount.put(strSGADEG, 1);
-                        //SGA related
-                        if (!pairSGATumor.contains(items[0] + items[2])) {
-                            pairSGATumor.add(items[0] + items[2]);
-                            mapSGAcount.put(strSGA, mapSGAcount.get(strSGA) + 1);
-                        }
+                    if(mapSGAtoDEGTumors.containsKey(strSGADEG)){
+                        mapSGAtoDEGTumors.get(strSGADEG).add(strTumor);
+                    }else{
+                        Set<String> setTumors = new HashSet<String>();
+                        setTumors.add(strTumor);
+                        mapSGAtoDEGTumors.put(strSGADEG, setTumors);
                     }
 
+                    if(mapSGATumors.containsKey(strSGA)){
+                        mapSGATumors.get(strSGA).add(strTumor);
+                    }else{
+                        Set<String> setTumors = new HashSet<String>();
+                        setTumors.add(strTumor);
+                        mapSGATumors.put(strSGA, setTumors);
+                    }
+                    
+                    if(mapDEGTumors.containsKey(strDEG)){
+                        mapDEGTumors.get(strDEG).add(strTumor);
+                    }else{
+                        Set<String> setTumors = new HashSet<String>();
+                        setTumors.add(strTumor);
+                        mapDEGTumors.put(strDEG, setTumors);
+                    }
                 }
-
             }
+                    //SGA and DEG both not new 
+        
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -154,28 +137,38 @@ public class TdiAppOnFGS {
         //build graph
         EdgeListGraphSingleConnections TDIgraph = new EdgeListGraphSingleConnections();
 
-        //add node
-        for (String itemSGA : mapSGAcount.keySet()) {
+        //add nodes
+        for (String itemSGA : mapSGATumors.keySet()) {
             Node nodeSGA = new DiscreteVariable(itemSGA);
             nodeSGA.setGeneType("SGA");
             TDIgraph.addNode(nodeSGA);
 
         }
-        for (String itemDEG : mapDEGcount.keySet()) {
+        for (String itemDEG : mapDEGTumors.keySet()) {
             Node nodeDEG = new DiscreteVariable(itemDEG);
             nodeDEG.setGeneType("DEG");
             TDIgraph.addNode(nodeDEG);
         }
-        //add edge
-        for (String itemEdge : mapSGAtoDEGcount.keySet()) {
+        //add edges
+        for (String itemEdge : mapSGAtoDEGTumors.keySet()) {
             String items[] = itemEdge.split(",");
-            Node nodeSGA = TDIgraph.getNode(items[0]);
-            Node nodeDEG = TDIgraph.getNode(items[1]);
+            String SGAname = items[0];
+            String DEGname = items[1];
+            Node nodeSGA = TDIgraph.getNode(SGAname);
+            Node nodeDEG = TDIgraph.getNode(DEGname);
             Edge edgeSGAtoDEG = new Edge(nodeSGA, nodeDEG, Endpoint.TAIL, Endpoint.ARROW);
-            int c11 = mapSGAtoDEGcount.get(itemEdge);
-            int c10 = mapSGAcount.get(items[0]) - c11;
-            int c01 = mapDEGcount.get(items[1]) - c11;
-            int c00 = totalTumors - c11 - c10 - c01;
+            int c11 = mapSGAtoDEGTumors.get(itemEdge).size();
+            int c10 = mapSGATumors.get(SGAname).size() - c11;
+            int c01 = mapDEGTumors.get(DEGname).size() - c11;
+            //Need to search if SGA DEG 10 and 01 have the same tumor
+            
+            Set<String> intersectionSGAandDEG = new HashSet<String>(mapSGATumors.get(SGAname));
+            intersectionSGAandDEG.retainAll(mapDEGTumors.get(DEGname));
+            
+            Set<String> setSGADEG = mapSGAtoDEGTumors.get(itemEdge);
+            intersectionSGAandDEG.removeAll(setSGADEG);
+            
+            int c00 = totalTumors - c11 - c10 - c01 + intersectionSGAandDEG.size();
             edgeSGAtoDEG.setEdgeScores(c00, c01, c10, c11);
             TDIgraph.addEdge(edgeSGAtoDEG);
         }
