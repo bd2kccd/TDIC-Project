@@ -153,7 +153,7 @@ public class TdiAppOnFGS {
         }
 
         totalTumors = setTotalTumors.size();
-
+        System.out.println("number of tumors in triples is: " + totalTumors);
         //build map mapEdgeScores
         Map<String, double[]> mapEdgeScores = new HashMap<String, double[]>();
         for (String itemEdge : mapSGAtoDEGTumors.keySet()) {
@@ -270,8 +270,8 @@ public class TdiAppOnFGS {
                             }
 
                             //scores[3] S1D1; scores[2] S1D0; scores[1] S0D1; scores[0] S0D0
-                            pDEG_S0 += log((scores[2] + 0.0000001) / (scores[2] + scores[0]));
-                            pDEG_S1 += log((scores[3] + 0.0000001) / (scores[3] + scores[1]));
+                            pDEG_S0 += log((scores[1] + 0.0000001) / (scores[1] + scores[0]));
+                            pDEG_S1 += log((scores[3] + 0.0000001) / (scores[3] + scores[2]));
                         }
 
                         pS1_DEGs = 1 / (1 + exp(pDEG_S0 - pDEG_S1));
@@ -311,20 +311,27 @@ public class TdiAppOnFGS {
         List<String> listSGA = (List<String>) SGA_tumor_SGAStates[0];
         List<String> listOfTumors = (List<String>) SGA_tumor_SGAStates[1];
         List<List<Double>> tumorSGAStates = (List<List<Double>>) SGA_tumor_SGAStates[2];
+        
         try (BufferedWriter bf = new BufferedWriter(new FileWriter(SGAStateFile))) {
             //write in SGA names
+            String strSGA = "";
             for (String SGAName : listSGA) {
-                bf.write(", " + SGAName);
+//                bf.write(", " + SGAName);
+                strSGA += SGAName + ",";
             }
-            bf.write("\n");
+ 
+            strSGA = strSGA.substring(0, strSGA.length()-1);
+            bf.write(strSGA + "\n");
 
             //Write in SGA probabily of each tumor
             for (int i = 0; i < listOfTumors.size(); i++) {
-                bf.write(listOfTumors.get(i));
+//                bf.write(listOfTumors.get(i));
+                String  strStates = "";
                 for (int j = 0; j < listSGA.size(); j++) {
-                    bf.write("," + tumorSGAStates.get(j).get(i));
+                    strStates +=  tumorSGAStates.get(j).get(i) + ",";
                 }
-                bf.write("\n");
+                strStates = strStates.substring(0, strStates.length()-1);
+                bf.write(strStates + "\n");
             }
 
         } catch (IOException e) {
