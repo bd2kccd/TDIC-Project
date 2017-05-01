@@ -1,0 +1,104 @@
+
+EMforInferDriverState(dataObj)
+    Read in Edgelist, SGAMatrix, DEGMatrix. 
+	=> driverSGATable, targetDEGTable, edgeList
+	=> driverSGAs, targetDEGs, mapSGAtoDEGs, tumorList
+     
+    T=0.5
+    Loop:
+		
+		EstimateParam(EdgeList, driverSGATable, targetDEGTable, DriverSGAs, targetDEGs)
+		=> mapEdgeParams, mapSGAParam
+		
+		InferActivationOfDriver(mapEdgeParams, mapSGAParam, driverSGATable, targetDEGTable)
+		=> driverActivites  
+		
+	    Thresholding(driverActivity,T)
+		=>inferDriverTable
+		
+		CompareMatrix(drvierSGATable, inferrDriverTable)
+		=> gtChange
+        
+		if (gtChange < 5%)
+			output inferDriverMatrix
+			break
+		elses
+			DataObj.updateDriverGtMatrix(inferDriverTable)
+			=>driverSGATable
+			T += 0.05
+	     
+class ReadInData
+	public: edgeList, tripletSGA, tripletDEG, mapSGAtoDEGS,driverSGA, driverSGATable,targetDEG, targetDEGTable
+
+	ReadInData
+		readInTriplet
+		readInSGAMatrix
+		readInDEGMatrix
+	
+	readInTriplet=>edgeList, tripletSGA, tripletDEG, mapSGAtoDEGS
+	readInSGAMatrix
+		foreach t in tumors
+			if firstrow
+				if item in tripeletSGA 
+					add to driverSGA
+			else
+				add driverSGA column to driverSGATable
+	readInDEGMatrix
+		=> targetDEG
+		=> targetDEGTable
+	
+class InferActivationOfDriver(dataObj, probObj)
+	driverGtActivity
+
+	InferActivationOfDriver
+		foreach t in tumors
+			foreach SGA s in driverSGA
+				if (driverGtmatrix(t,s) == 1)
+					driverGtActivity(t,s) = 1
+				else
+					get DEGS from mapSGAtoDEGs						
+					
+					foreach DEG d in DEGs:
+						state = getDEGState(d,TargetDegMatrix)
+						
+						if (tate == 0)
+							logP(d|s=0) += logP(d=0|s=0)
+							logP(d|s=1) += logP(d=0|s=1)
+						else
+							logP(d|s=0) += logP(d=1|s=0)
+							logP(d|s=1) += logP(d=1|s=1)
+					
+					p(s=1|d) = 1/(1 + exp(logP(d|s=0) - logP(d|s=1)) * p(s=0)/p(s=1) )
+					
+				driverGtActivity(t,s) = p(s=1|d)
+			
+			
+class EstimateParam
+	mapEdgeParam[4] 
+	mapSGAParam[2] 
+	
+	EstimateParam
+		foreach edge in edgeList
+			get SGA, DEG
+			get SGAIndx in driverSGATable 
+			get DEGIndx in targetDEGTable
+		
+			for t in tumors
+				get SGA value vSGA in dirverSGATable(SGAIndx,t)
+				get DEG value vDEG in driverDEGTable(DEGIndx, t)
+		    	EdgeParam[vSGA * 2 + vDEG] ++
+			mapEdgeParam.add(EdgeParam)
+			
+			
+		for SGA in driverSGA
+			for t in tumors
+				get SGA value vSGA in dirverSGATable(SGAIndx,t)
+				SGAParam[vSGA] ++
+			if (SGA is new)
+					SGAParam[vSGA] ++	
+			
+			
+			mapSGAParam.add(SGAparam)
+			
+		    normalize parameter
+			
