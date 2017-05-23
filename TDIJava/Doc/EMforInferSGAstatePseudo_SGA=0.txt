@@ -1,3 +1,5 @@
+This is the version to infer only SGA=0
+
 
 EMforInferDriverState(dataObj)
     Read in Edgelist, SGAMatrix, DEGMatrix. 
@@ -13,7 +15,7 @@ EMforInferDriverState(dataObj)
 		InferActivationOfDriver(mapEdgeParams, mapSGAParam, driverSGATable, targetDEGTable)
 		=> driverActivites  
 		
-	    Thresholding(driverActivity,T)
+	    thresholding(driverActivity,T)
 		=>inferDriverTable
 		
 		CompareMatrix(drvierSGATable, inferrDriverTable)
@@ -48,8 +50,9 @@ class ReadInData
 		=> targetDEGTable
 	
 class InferActivationOfDriver(dataObj, probObj)
-	driverGtActivity
-
+	public driverGtActivity, inferDriverTable
+	
+	
 	InferActivationOfDriver
 		foreach t in tumors
 			foreach SGA s in driverSGA
@@ -71,7 +74,9 @@ class InferActivationOfDriver(dataObj, probObj)
 					p(s=1|d) = 1/(1 + exp(logP(d|s=0) - logP(d|s=1)) * p(s=0)/p(s=1) )
 					
 				driverGtActivity(t,s) = p(s=1|d)
-			
+	
+	thresholding(driverActivity,T)
+		=>inferDriverTable
 			
 class EstimateParam
 	mapEdgeParam[4] 

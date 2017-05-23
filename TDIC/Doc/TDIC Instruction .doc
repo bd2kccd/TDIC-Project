@@ -1,0 +1,74 @@
+
+
+<SourceCode>
+
+We have two versions of TDIC, one is CPU version and the other is GPU version. Source codes are under folder TDIC_01_CPU_Tumors and DIC_01_Cuda_Tumors separately at https://github.com/bd2kccd/TDIC-Project/tree/Development/TDIC/SourceCode
+
+<Compile and link command>
+
+There is a Makefile in each source code folder. Run Makefile to generate executable file for each version
+
+<Input and Output>
+
+TDIC needs 5 input files:
+
+	User input data file
+	SGA matrix data file
+	DEG matrix data file
+	Global driver dictionary file
+	Cancer type Coding table
+
+User input data file: The content depends on each user input. The other 4 input files are fixed data set. 
+
+User input data file format:
+	Tumor name1
+	Cancer type
+	SGA genes separated by comma
+	DEG genes separated by comma
+	Tumor name 2
+	.
+	.
+
+The number of output file depends on the user input. If input contains only one tumor, then output is one file; if input contains multiple tumors, then output files will be multiple files, each corresponds to one tumor.
+
+<TDI executable files>
+PanCanTDICexe -- Single thread CPU verrsion
+PanCanTDICexeOMP -- CPU OpenMP version
+PanCanTDICexeGPU -- GPU version
+
+
+<TDIC Command Line>
+
+The command line of all the versions are the same except for the executable file name
+
+PanCanTDIC_executalbe -i tumor_input_file -c GtMatrix_file -d GeMatrix_file -g Global_driver_file -t Tissue_type_coding_file -o ouput_path
+
+Note:
+-o 'Output file directory': it is only directory, not the file. Program will generate file name based on the processed tumor. 
+
+for example, directory arrangements are as following:
+[Executables] 
+    PanCanTDICexe
+    PanCanTDICexeOMP
+    PanCanTDICexeGPU
+
+[DataSource]
+    TDIdataset.txt (attached)
+    PANCAN.GtM.4468tumors.noCan.csv (https://www.dropbox.com/)
+    PANCAN.GeM.4468tumors.csv(https://www.dropbox.com/)
+    PANCAN.Global.dict.4468tumors.csv (attached)
+    TissueTypeCoding13.csv (attached)
+
+[OUTPUTS]
+
+The command line should be
+
+./TDICexeOMP -i ../SourceData/ TDIdataset.txt -f ../SourceData/ PANCAN.GtM.4468tumors.noCan.csv  -d ../SourceData/ PANCAN.GeM.4468tumors.csv  -g ../SourceData/ PANCAN.Global.dict.4468tumors.csv –t  TissueTypeCoding13.csv –o ../OUTPUTS
+
+
+
+
+
+
+
+
