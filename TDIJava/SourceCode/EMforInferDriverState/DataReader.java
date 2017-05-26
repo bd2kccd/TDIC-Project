@@ -10,8 +10,10 @@ package emforinferdriverstate;
  * @author XIM33
  */
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 //import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 //import java.io.FileWriter;
 import java.io.IOException;
 //import static java.lang.Math.exp;
@@ -215,4 +217,33 @@ class DataReader {
 
         
     }
+    
+    
+    public void outputDriverSGATable(String fileDriverSGATable){
+         try (BufferedWriter bf = new BufferedWriter(new FileWriter(fileDriverSGATable))) {
+            //write in SGA names
+            String strSGA = "";
+            for (String SGAName : driverSGAs) {
+                strSGA +=  SGAName + ",";
+            }
+            strSGA = strSGA.substring(0, strSGA.length() - 1);//remove last ,
+            bf.write(strSGA + "\n");
+
+            //Write in SGA probabily of each tumor
+            for (int i = 0; i < driverSGATable.size(); i++) {
+                String strStates = "";
+                for (int j = 0; j < driverSGAs.size(); j++) {
+                    strStates +=  driverSGATable.get(i).get(j) + ",";
+                }
+                //remove the last ","
+                strStates = strStates.substring(0, strStates.length() - 1);
+                bf.write(strStates + "\n");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+    }           
+    
 }

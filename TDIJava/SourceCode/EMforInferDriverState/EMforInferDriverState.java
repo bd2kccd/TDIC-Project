@@ -13,14 +13,15 @@ import java.util.Set;
 class EMforInferDriverState {
 
     public static void main(String[] args) {
-//        String fileTriplets = "../DataSource/sigTDIresults.triplet.PANCAN.noCT.DEGrate=0.2.csv";
-//        String fileGtMatrix = "../DataSource/PANCAN.GtM.4468tumors.noCan.csv";
-//        String fileGeMatrix = "../DataSource/PANCAN.GeM.4468tumors.csv";
-//        String FileInferDriver = "../DataSource/PANCANSigEmInferState.csv";
-        String fileTriplets = "../DataSource/tSgaDegTumor.csv";
-        String fileGtMatrix = "../DataSource/tGtCM.csv";
-        String fileGeMatrix = "../DataSource/tGeM.csv";
-        String FileInferDriver = "../DataSource/tInferDriver.csv";
+        String fileTriplets = "../DataSource/PANCANsigEdgeList.csv";
+        String fileGtMatrix = "../DataSource/PANCAN.GtM.4468tumors.noCan.csv";
+        String fileGeMatrix = "../DataSource/PANCAN.GeM.4468tumors.csv";
+        String fileInferState = "../DataSource/PANCANSigEmInferState.csv";
+        String fileDriverSGATable = "../DataSource/PANCAN.4468tumors.driverSGATable.csv";
+//        String fileTriplets = "../DataSource/tSgaDegTumor.csv";
+//        String fileGtMatrix = "../DataSource/tGtCM.csv";
+//        String fileGeMatrix = "../DataSource/tGeM.csv";
+//        String fileInferState = "../DataSource/tInferDriver.csv";
         DataReader dataObj = new DataReader(fileTriplets, fileGtMatrix, fileGeMatrix);
 //        System.out.println("Original driverSGATable");
 //        for (int i = 0; i < dataObj.driverSGATable.size(); i++) {
@@ -93,8 +94,8 @@ class EMforInferDriverState {
             System.out.println("This is the " + reRun + "th run");
             if (change < 0.001 || T > 1) {
                 System.out.println("Total times of run is " + reRun + ". Final cut shreshold is " + T);
-                actObj.outputInferActivation(FileInferDriver);
-
+                actObj.outputInferActivation(fileInferState);
+                dataObj.outputDriverSGATable(fileDriverSGATable);
 
                 break;    
             
