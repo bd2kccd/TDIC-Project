@@ -14,58 +14,19 @@ class EMforInferDriverState {
 
     public static void main(String[] args) {
         String fileTriplets = "../DataSource/PANCANsigEdgeList.csv";
-        String fileGtMatrix = "../DataSource/PANCAN.GtM.4468tumors.noCan.csv";
+        String fileGtMatrix = "../DataSource/Drivercallpertumor.csv";
         String fileGeMatrix = "../DataSource/PANCAN.GeM.4468tumors.csv";
-        String fileInferState = "../DataSource/PANCANSigEmInferState.csv";
-        String fileDriverSGATable = "../DataSource/PANCAN.4468tumors.driverSGATable.csv";
-//        String fileTriplets = "../DataSource/tSgaDegTumor.csv";
-//        String fileGtMatrix = "../DataSource/tGtCM.csv";
-//        String fileGeMatrix = "../DataSource/tGeM.csv";
-//        String fileInferState = "../DataSource/tInferDriver.csv";
+        String fileInferState = "../DataSource/Drivercallpertumor.EmInferState.csv";
+        String fileDriverSGATable = "../DataSource/Drivercallpertumor.driverSGATable.csv";
+
         DataReader dataObj = new DataReader(fileTriplets, fileGtMatrix, fileGeMatrix);
-//        System.out.println("Original driverSGATable");
-//        for (int i = 0; i < dataObj.driverSGATable.size(); i++) {
-//            for (int j = 0; j < dataObj.driverSGATable.get(i).size(); j++) {
-//                System.out.print(dataObj.driverSGATable.get(i).get(j));
-//                System.out.print(',');
-//            }
-//            System.out.println('\n');
-//
-//        }
 
         int reRun = 0;
         double T = 0.5;
         do {
-// System.out.println("newSGATable");
-//for (int i = 0; i < dataObj.driverSGATable.size(); i++) {
-//            for (int j = 0; j < dataObj.driverSGATable.get(i).size(); j++) {
-//                System.out.print(dataObj.driverSGATable.get(i).get(j));
-//                System.out.print(',');
-//            }
-//            System.out.println('\n');
-//
-//        }
             reRun += 1;
 
             EstimateParams paramObj = new EstimateParams(dataObj.edgeList, dataObj.driverSGAs, dataObj.targetDEGs, dataObj.driverSGATable, dataObj.targetDEGTable);
-//        //test purpose
-//        for (String edge : paramObj.mapEdgeParam.keySet()) {
-//            System.out.print(edge + ":");
-//            for (Double d : paramObj.mapEdgeParam.get(edge)) {
-//                System.out.print(d);
-//                System.out.print(',');
-//            }
-//            System.out.println("\n");
-//        }
-//
-//        for (String SGA : dataObj.driverSGAs) {
-//            System.out.print(SGA + ":");
-//            for (Double d :paramObj.mapSGAParam.get(SGA)) {
-//                System.out.print(d);
-//                System.out.print(',');
-//            }
-//            System.out.println("\n");
-//        }            
 
             InferDriverActivation actObj = new InferDriverActivation(paramObj.mapEdgeParam, paramObj.mapSGAParam,
                     dataObj.targetDEGTable, dataObj.driverSGAs, dataObj.targetDEGs, dataObj.mapSgaDegs);

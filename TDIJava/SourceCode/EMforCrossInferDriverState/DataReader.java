@@ -132,7 +132,7 @@ class DataReader {
         System.out.println("Reading GtMatrix...");
         driverSGAs = new ArrayList<String>();
         driverSGATable = new ArrayList<ArrayList<Integer>>();
-        tumorNames = new ArrayList<String>();
+//        tumorNames = new ArrayList<String>();
         try (BufferedReader br = new BufferedReader(new FileReader(fileGtMatrix))) {
             String sCurrentLine;
             int lineCounter = 0;
@@ -152,7 +152,7 @@ class DataReader {
                         }
                     }
                 } else {
-                    tumorNames.add(items[0]);
+//                    tumorNames.add(items[0]);
                     ArrayList<Integer> SGAValueRow = new ArrayList<Integer>();
                     for (int j=0; j<SGAIndx.size(); j++){
                         SGAValueRow.add(Integer.parseInt(items[SGAIndx.get(j)]));
@@ -171,6 +171,7 @@ class DataReader {
         System.out.println("Reading GeMatrix...");
         targetDEGs = new ArrayList<String>();
         targetDEGTable = new ArrayList<ArrayList<Integer>>();
+        tumorNames = new ArrayList<String>();
         try (BufferedReader br = new BufferedReader(new FileReader(fileGeMatrix))) {
             String sCurrentLine;
             int lineCounter = 0;
@@ -188,7 +189,7 @@ class DataReader {
                         }
                     }
                 } else {
-
+                    tumorNames.add(items[0]);
                     ArrayList<Integer> DEGValueRow = new ArrayList<Integer>();
                     for (int j=0; j<DEGIndx.size(); j++){
                         DEGValueRow.add(Integer.parseInt(items[DEGIndx.get(j)]));
@@ -232,20 +233,20 @@ class DataReader {
             //write in SGA names
             String strSGA = "";
             for (String SGAName : driverSGAs) {
-                strSGA +=  SGAName + ",";
+                strSGA +=  "," + SGAName ;
             }
-            strSGA = strSGA.substring(0, strSGA.length() - 1);//remove last ,
+//            strSGA = strSGA.substring(0, strSGA.length() - 1);//remove last ,
             bf.write(strSGA + "\n");
 
             //Write in SGA probabily of each tumor
             for (int i = 0; i < driverSGATable.size(); i++) {
                 String strStates = "";
                 for (int j = 0; j < driverSGAs.size(); j++) {
-                    strStates +=  driverSGATable.get(i).get(j) + ",";
+                    strStates +=  "," + driverSGATable.get(i).get(j) ;
                 }
                 //remove the last ","
-                strStates = strStates.substring(0, strStates.length() - 1);
-                bf.write(strStates + "\n");
+//                strStates = strStates.substring(0, strStates.length() - 1);
+                bf.write(tumorNames.get(i) + strStates + "\n");
             }
 
         } catch (IOException e) {

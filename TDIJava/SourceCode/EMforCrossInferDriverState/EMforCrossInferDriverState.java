@@ -15,81 +15,32 @@ class EMforCrossInferDriverState {
     public static void main(String[] args) {
 
 //        String fileEdgeList = "../DataSource/tSgaDegTumor.csv";
-//        String fileGtTrainingMatrix = "../DataSource/CrossMatrix/tGtTraining.10.csv";
-//        String fileGtTestingMatrix = "../DataSource/CrossMatrix/tGtTesting.10.csv";
-//        String fileGeTrainingMatrix = "../DataSource/CrossMatrix/tGeTraining.10.csv";
-//        String fileGeTestingMatrix = "../DataSource/CrossMatrix/tGeTesting.10.csv";
-//        String fileInferDriver = "../DataSource/CrossMatrix/tInferDriver.10.csv";
-//        String fileDriverSGATable = "../DataSource/CrossMatrix/tDriverSGATable.10.csv";
+//        String fileGtTrainingMatrix = "../DataSource/CrossMatrix/tGtTraining.50.csv";
+//        String fileGtTestingMatrix = "../DataSource/CrossMatrix/tGtTesting.50.csv";
+//        String fileGeTrainingMatrix = "../DataSource/CrossMatrix/tGeTraining.50.csv";
+//        String fileGeTestingMatrix = "../DataSource/CrossMatrix/tGeTesting.50.csv";
+//        String fileInferDriver = "../DataSource/CrossMatrix/tInferDriver.50.csv";
+//        String fileDriverSGATable = "../DataSource/CrossMatrix/tDriverSGATable.50.csv";
 
         String fileEdgeList = "../DataSource/PANCANsigEdgeList.csv";
-        String fileGtTrainingMatrix = "../DataSource/CrossMatrix/PANCAN.GtM.4468tumorsTraining.10.csv";
-        String fileGtTestingMatrix = "../DataSource/CrossMatrix/PANCAN.GtM.4468tumorsTesting.10.csv";
-        String fileGeTrainingMatrix = "../DataSource/CrossMatrix/PANCAN.GeM.4468tumorsTraining.10.csv";
-        String fileGeTestingMatrix = "../DataSource/CrossMatrix/PANCAN.GeM.4468tumorsTesting.10.csv";
-        String fileInferDriver = "../DataSource/CrossMatrix/PANCAN.InferDriver.10.csv";
-//        String fileDriverSGATable = "../DataSource/CrossMatrix/PANCAN.DriverSGATable.10.csv";
+        String fileGtTrainingMatrix = "../DataSource/CrossMatrixDriver/PANCAN.Drivercallpertumor.4468tumors.training.10.csv";
+//        String fileGtTestingMatrix = "../DataSource/CrossMatrixDriver/PANCAN.Drivercallpertumor.4468tumors.testing.10.csv";
+        String fileGeTrainingMatrix = "../DataSource/CrossMatrixDriver/PANCAN.GeM.4468tumors.training.10.csv";
+        String fileGeTestingMatrix = "../DataSource/CrossMatrixDriver/PANCAN.GeM.4468tumors.testing.10.csv";
+        String fileInferDriver = "../DataSource/CrossMatrixDriver/PANCAN.Drivercallpertumor.4468tumors.InferDriver.10.withTumorID.csv";
+//        String fileDriverSGATable = "../DataSource/CrossMatrixDriver/PANCAN.Drivercallpertumor.4468tumors.DriverSGATable.10.csv";
         
         
         DataReader dataObj = new DataReader(fileEdgeList, fileGtTrainingMatrix, fileGeTrainingMatrix);
-//        System.out.println("Original driverSGATable");
-//        for (int i = 0; i < dataObj.driverSGATable.size(); i++) {
-//            for (int j = 0; j < dataObj.driverSGATable.get(i).size(); j++) {
-//                System.out.print(dataObj.driverSGATable.get(i).get(j));
-//                System.out.print(',');
-//            }
-//            System.out.println('\n');
-//
-//        }
 
         int reRun = 0;
         double T = 0.5;
         do {
-// System.out.println("newSGATable");
-//for (int i = 0; i < dataObj.driverSGATable.size(); i++) {
-//            for (int j = 0; j < dataObj.driverSGATable.get(i).size(); j++) {
-//                System.out.print(dataObj.driverSGATable.get(i).get(j));
-//                System.out.print(',');
-//            }
-//            System.out.println('\n');
-//
-//        }
             reRun += 1;
 
             EstimateParams paramObj = new EstimateParams(dataObj.edgeList, dataObj.driverSGAs, dataObj.targetDEGs, dataObj.driverSGATable, dataObj.targetDEGTable);
-//        //test purpose
-//        for (String edge : paramObj.mapEdgeParam.keySet()) {
-//            System.out.print(edge + ":");
-//            for (Double d : paramObj.mapEdgeParam.get(edge)) {
-//                System.out.print(d);
-//                System.out.print(',');
-//            }
-//            System.out.println("\n");
-//        }
-//
-//        for (String SGA : dataObj.driverSGAs) {
-//            System.out.print(SGA + ":");
-//            for (Double d :paramObj.mapSGAParam.get(SGA)) {
-//                System.out.print(d);
-//                System.out.print(',');
-//            }
-//            System.out.println("\n");
-//        }            
-
             InferDriverActivation actObj = new InferDriverActivation(paramObj.mapEdgeParam, paramObj.mapSGAParam,
                     dataObj.targetDEGTable, dataObj.driverSGAs, dataObj.targetDEGs, dataObj.mapSgaDegs);
-
-//        //for test purpose
-//        System.out.println("driverActivationTable");
-//        for (int i = 0; i < actObj.driverActivationTable.size(); i++) {
-//
-//            for (int j = 0; j < actObj.driverActivationTable.get(i).size(); j++) {
-//
-//                System.out.print(actObj.driverActivationTable.get(i).get(j));
-//                System.out.print(" , ");
-//            }
-//            System.out.println("\n");
-//        }            
 
 
             actObj.thresholding(T);
@@ -104,13 +55,13 @@ class EMforCrossInferDriverState {
             if (change < 0.001 || T > 1) {
                 System.out.println("Total times of run is " + reRun + ". Final cut shreshold is " + T);
                 
-                dataObj.readInGtMatrix(fileGtTestingMatrix);
+//                dataObj.readInGtMatrix(fileGtTestingMatrix);
                 dataObj.readInGeMatrix(fileGeTestingMatrix);
                 InferDriverActivation actObjTesting = new InferDriverActivation(paramObj.mapEdgeParam, paramObj.mapSGAParam,
                     dataObj.targetDEGTable, dataObj.driverSGAs, dataObj.targetDEGs, dataObj.mapSgaDegs);
                 
-                actObjTesting.outputInferActivation(fileInferDriver);
-//                dataObj.outputDriverSGATable(fileDriverSGATable);
+                actObjTesting.outputInferActivation(fileInferDriver, dataObj.tumorNames);
+//                dataObj.outputDriverSGATable(fileDriverSGATable); //output contains tumorName, since tumor name is defined in dataObj, so no need to pass in
 
                 break;    
             

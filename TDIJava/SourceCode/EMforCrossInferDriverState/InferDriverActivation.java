@@ -176,26 +176,26 @@ public class InferDriverActivation {
         return (double)totalChange/totalNum;
     }
     
-    public void outputInferActivation( String FileInferDriver){
+    public void outputInferActivation( String FileInferDriver, ArrayList<String> tumorNames){
         try (BufferedWriter bf = new BufferedWriter(new FileWriter(FileInferDriver))) {
             //write in SGA names
             String strSGA = "";
             for (String SGAName : driverSGAs) {
-                strSGA +=  SGAName + ",";
+                strSGA +=  "," + SGAName ;
             }
 //            System.out.println("strSGA="+strSGA);
-            strSGA = strSGA.substring(0, strSGA.length() - 1);
+//            strSGA = strSGA.substring(0, strSGA.length() - 1);
             bf.write(strSGA + "\n");
 
             //Write in SGA probabily of each tumor
             for (int i = 0; i < driverActivationTable.size(); i++) {
                 String strStates = "";
                 for (int j = 0; j < driverSGAs.size(); j++) {
-                    strStates +=  driverActivationTable.get(i).get(j) + ",";
+                    strStates +=  "," + driverActivationTable.get(i).get(j) ;
                 }
                 //remove the last ","
-                strStates = strStates.substring(0, strStates.length() - 1);
-                bf.write(strStates + "\n");
+//                strStates = strStates.substring(0, strStates.length() - 1);
+                bf.write(tumorNames.get(i) + strStates + "\n");
             }
 
         } catch (IOException e) {
