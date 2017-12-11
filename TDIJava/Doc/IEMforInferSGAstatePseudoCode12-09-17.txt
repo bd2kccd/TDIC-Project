@@ -1,0 +1,65 @@
+SGAMatrix, DEGMatrix =>(run TDI) triplets
+triplets => driverSGA, targetDEG, edgelist
+
+
+EMforInferDriverState(dataObj)
+	SGATrainingMatrix, DEGTrainingMatrix =>(run TDI) triplets
+    triplets => Edgelist, driverSGAs, targetDEGs
+	SGAMatrix, driverSGA => driverSGAtable
+	DEGMatrix, targetDEG => tagetDEGtable
+
+     
+    T=0.5
+    Loop:
+		
+		EstimateParam(EdgeList, driverSGATable, targetDEGTable, DriverSGAs, targetDEGs)
+		=> mapEdgeParams, mapSGAParam
+		
+		InferActivationOfDriver(mapEdgeParams, mapSGAParam, targetDEGTable)
+		=> driverActivites  
+		
+		thresholding(driverActivity,T)
+		=>inferDriverTable
+		
+		UpdateInferDriverTable with original SGA=1
+		=>inferDriverTable
+		
+		CompareMatrix(drvierSGATable, inferrDriverTable)
+		=> gtChange
+        
+		if (gtChange < 5%)
+			read in DEGTestingMatrix
+			read in SGATestingMatrix
+			
+			InferActivationOfDriver=>inferDriverTable
+			
+			UpdateInferDriverTable with original SGA=1
+			
+			output inferDriverTable
+			break
+		elses
+			update driverSGATable with inferDriverTable
+			
+			T += 0.05
+
+
+EstimateParameter
+	EdgeParameter:get driverSGA, targetDEG 0/1 count and calculate probility P(d=0|s=0),P(d=1|s=0),P(d=0|s=1),P(d=0|s=1)
+	SGAParameter: get driverSGA 0/1 count and calculate probility
+
+InferActivationOfDriver(tumor, SGA) 
+	foreach t in tumors
+		foreach SGA s in driverSGA
+			get DEGS from mapSGAtoDEGs						
+				logP(DEGs|s=0)+= logP(d|s=0)
+				logP(DEGs|s=1)+= logP(d|s=1)
+				
+			p(s=1|DEGs) = 1/(1 + exp(logP(DEGs|s=0) - logP(DEGs|s=1)) * p(s=0)/p(s=1) )
+				
+			driverGtActivity(t,s) = p(s=1|DEGs)	
+	
+	
+thresholding(driverActivity,T)=>inferDriverTable
+
+
+		
