@@ -19,6 +19,12 @@ class EMforInferDriverState {
         String fileInferState = "../DataSource/Drivercallpertumor.EmInferState.csv";
         String fileDriverSGATable = "../DataSource/Drivercallpertumor.driverSGATable.csv";
 
+//        String fileTriplets = "../DataSource/Vicky/Binary-Skip-Missing-min36-0.044-SGA-Antibody-Edges.csv";
+//        String fileGtMatrix = "../DataSource/Vicky/PanCancer13tts.SGAmatrix.4TCI.RPPA.BRCAonly.min36sga.csv";
+//        String fileGeMatrix = "../DataSource/Vicky/FINAL_COMBO_RPPA_Binary_Data_min36_-1.csv";
+//        String fileInferState = "../DataSource/Vicky/RPPA.EmInferState_withUpdate1.csv";
+//        String fileDriverSGATable = "../DataSource/Vicky/RPPA.driverSGATable_withUpdate1.csv";        
+        
         DataReader dataObj = new DataReader(fileTriplets, fileGtMatrix, fileGeMatrix);
 
         int reRun = 0;

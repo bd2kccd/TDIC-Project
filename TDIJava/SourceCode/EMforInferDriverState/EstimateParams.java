@@ -34,8 +34,8 @@ public class EstimateParams {
             mapDEG.put(targetDEGs.get(i), i);
         }
 
-        Double[] edgeCount = new Double[]{1.0,1.0,1.0,1.0};
-        Double[] SGACount = new Double[]{1.0,1.0};
+        Double[] edgeCount = new Double[]{1.0,1.0,1.0,1.0};//initialized with 1 to avoid divided by 0 in calculating probability
+        Double[] SGACount = new Double[]{1.0,1.0};//initialized with 1 to avoid divided by 0 in calculating probability
         String[] items;
         for (String strEdge : edgeList) {
             items = strEdge.split(",");
@@ -47,7 +47,7 @@ public class EstimateParams {
             }
             int SGAIndx = mapSGA.get(SGA);
             int DEGIndx = mapDEG.get(DEG);
-            Arrays.fill(edgeCount, 1.0);
+            Arrays.fill(edgeCount, 1.0);//re-initialization
             Arrays.fill(SGACount, 1.0);
             //Need to check if current SGA has been counted before
             boolean SGACounted = false;
@@ -57,9 +57,22 @@ public class EstimateParams {
             for (int t = 0; t < SGATable.size(); t++) {
                 int SGAValue = SGATable.get(t).get(SGAIndx);
                 int DEGValue = DEGTable.get(t).get(DEGIndx);
-                edgeCount[SGAValue * 2 + DEGValue] += 1;
+//                edgeCount[SGAValue * 2 + DEGValue] += 1;//If table has missing value then this count is not appropriate
+                if (SGAValue == 0 && DEGValue == 0)
+                    edgeCount[0] += 1;
+                else if (SGAValue == 0 && DEGValue == 1)
+                    edgeCount[1] += 1;
+                else if (SGAValue == 1 && DEGValue == 0)
+                    edgeCount[2] += 1;
+                else if (SGAValue == 1 && DEGValue == 1)
+                    edgeCount[3] += 1;
+                
                 if (!SGACounted) {
-                    SGACount[SGAValue] += 1;
+//                    SGACount[SGAValue] += 1;//If table has missing value then this count is not appropriate
+                    if (SGAValue == 0)
+                        SGACount[0] += 1;
+                    else if (SGAValue == 1)
+                        SGACount[1] += 1;
                 }
             }
             //normalize count to propability
@@ -76,7 +89,7 @@ public class EstimateParams {
                 paramOfSGA[0] = SGACount[0] / (SGACount[0] + SGACount[1]);
                 paramOfSGA[1] = SGACount[1] / (SGACount[0] + SGACount[1]);
                 mapSGAParam.put(SGA, paramOfSGA);
-            }
+             }
         }
 //        //test purpose
 //        for (String edge : mapEdgeParam.keySet()) {

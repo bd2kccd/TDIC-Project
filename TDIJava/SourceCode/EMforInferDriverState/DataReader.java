@@ -30,13 +30,21 @@ class DataReader {
     public ArrayList<ArrayList<Integer>> targetDEGTable = new ArrayList<ArrayList<Integer>>();
     public ArrayList<ArrayList<Integer>> driverSGATable = new ArrayList<ArrayList<Integer>>();
 
-    private ArrayList<String> tripletSGAs = new ArrayList<String>();//tripletSGAs, driverSGAs have same SGAs, but different order
+    private ArrayList<String> tripletSGAs = new ArrayList<String>();
     private ArrayList<String> tripletDEGs = new ArrayList<String>();
-
+    private ArrayList<String> tripletEdgeList = new ArrayList<String>();
+    private ArrayList<String> GtMatrixSGAs = new ArrayList<String>();
+    private ArrayList<String> GeMatrixDEGs = new ArrayList<String>();
+   
+    
     public DataReader(String fileTriplets, String fileGtMatrix, String fileGeMatrix) {
+        GtMatrixSGAs = getMatrixColumns(fileGtMatrix);
+        GeMatrixDEGs = getMatrixColumns(fileGeMatrix);
         readInTriples(fileTriplets);
+        UpdateData();
         readInGtMatrix(fileGtMatrix);
         readInGeMatrix(fileGeMatrix);
+        
 
 // for test purpose        
 //        for (String item : edgeList){
@@ -78,6 +86,23 @@ class DataReader {
 
     }
 
+    
+    public ArrayList<String> getMatrixColumns(String fileGtMatrix) {
+        System.out.println("Reading GtMatrix to get SGA names...");
+        ArrayList<String> columnNames = new ArrayList<String>();
+        try (BufferedReader br = new BufferedReader(new FileReader(fileGtMatrix))) {
+            String firstLine = br.readLine();
+            String[] items = firstLine.split(",");
+
+            for (int i = 1; i < items.length; i++) {
+                columnNames.add(items[i]);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return columnNames;
+    }
+    
     public void readInTriples(String fileTriplets) {
         System.out.println("Reading triplet data...");
         try (BufferedReader br = new BufferedReader(new FileReader(fileTriplets))) {
@@ -96,8 +121,8 @@ class DataReader {
                     String strSGA = items[0].trim();
                     String strDEG = items[1].trim();
 
-                    if (!edgeList.contains(strSGA + "," + strDEG)) {
-                        edgeList.add(strSGA + "," + strDEG);
+                    if (!tripletEdgeList.contains(strSGA + "," + strDEG)) {
+                        tripletEdgeList.add(strSGA + "," + strDEG);
                     }
 
                     if (!tripletSGAs.contains(strSGA)) {
@@ -106,15 +131,6 @@ class DataReader {
                     if (!tripletDEGs.contains(strDEG)) {
                         tripletDEGs.add(strDEG);
                     }
-
-                    if (mapSgaDegs.containsKey(strSGA)) {
-                        mapSgaDegs.get(strSGA).add(strDEG);
-                    } else {
-                        Set<String> setDEGs = new HashSet<String>();
-                        setDEGs.add(strDEG);
-                        mapSgaDegs.put(strSGA, setDEGs);
-                    }
-
                 }
             }
 
@@ -122,6 +138,59 @@ class DataReader {
             e.printStackTrace();
         }
 
+    }
+
+    public void UpdateData(){
+    //update edgeList
+    //get intersection of SGAs DEGs of Matrix and triplets and save to driverSGAs and targetDEGs 
+    //build mapSgaDegs
+    
+        //get new edgelist
+        String[] items;
+        for (String strEdge : tripletEdgeList) {
+            items = strEdge.split(",");
+            String SGA = items[0];
+            String DEG = items[1];
+            if (GtMatrixSGAs.contains(SGA) && GeMatrixDEGs.contains(DEG)){
+                edgeList.add(strEdge);
+            }
+        }
+        
+        //get edgeSGAs, edgeDEGs and build mapSGaDegs
+        ArrayList<String> edgeSGAs = new ArrayList<String>();
+        ArrayList<String> edgeDEGs = new ArrayList<String>();
+        for (String strEdge : edgeList) {
+            items = strEdge.split(",");
+            String strSGA = items[0];
+            String strDEG = items[1];
+            
+            if (!edgeSGAs.contains(strSGA)) {
+                edgeSGAs.add(strSGA);
+            }
+            if (!edgeDEGs.contains(strDEG)) {
+                edgeDEGs.add(strDEG);
+            }
+            
+            if (mapSgaDegs.containsKey(strSGA)) {
+                mapSgaDegs.get(strSGA).add(strDEG);
+            } else {
+                Set<String> setDEGs = new HashSet<String>();
+                setDEGs.add(strDEG);
+                mapSgaDegs.put(strSGA, setDEGs);
+            }
+        }
+        //based on edgeSGAs, edgeDEGs create driverSGAs, targetDEGs
+        //driverSGAs, targetDEGs have the same item with edgeSGAs, edgeDEGs, but have different order 
+        for (String SGA : GtMatrixSGAs){
+            if (edgeSGAs.contains(SGA)){
+                driverSGAs.add(SGA);
+            }
+        }
+        for (String DEG : GeMatrixDEGs){
+            if (edgeDEGs.contains(DEG)){
+                targetDEGs.add(DEG);
+            }
+        }
     }
 
     public void readInGtMatrix(String fileGtMatrix) {
@@ -135,12 +204,9 @@ class DataReader {
             while ((sCurrentLine = br.readLine()) != null) {
                 lineCounter++;
                 items = sCurrentLine.split(",");
-
                 if (lineCounter == 1) {//this is the first line
-
                     for (int i = 0; i < items.length; i++) {
-                        if (tripletSGAs.contains(items[i])) {
-                            driverSGAs.add(items[i]);
+                        if (driverSGAs.contains(items[i])) {
                             SGAIndx.add(i);
                         }
                     }
@@ -173,8 +239,7 @@ class DataReader {
 
                 if (lineCounter == 1) {//this is the first line
                     for (int i = 0; i < items.length; i++) {
-                        if (tripletDEGs.contains(items[i])) {
-                            targetDEGs.add(items[i]);
+                        if (targetDEGs.contains(items[i])) {
                             DEGIndx.add(i);
                         }
                     }
@@ -192,7 +257,9 @@ class DataReader {
             e.printStackTrace();
         }
     }
+    
 
+        
     public void updateDriverSGATable(ArrayList<ArrayList<Integer>> newSGATable) {
         System.out.println("Update driverSGATable...");
         int tumorSize = driverSGATable.size();
@@ -207,7 +274,6 @@ class DataReader {
 //        for test purpose
 //         for (int i = 0; i < tumorSize; i++) {
 //
-//            for (int j = 0; j < SGASize; j++) {
 //
 //                System.out.print(driverSGATable.get(i).get(j));
 //                System.out.print(" , ");

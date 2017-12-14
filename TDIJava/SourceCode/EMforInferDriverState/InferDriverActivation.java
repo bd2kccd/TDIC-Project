@@ -72,7 +72,8 @@ public class InferDriverActivation {
                         if (DEGState == 1) {
                             logPds0 += log(Pd1s0);
                             logPds1 += log(Pd1s1);
-                        } else {
+                        } 
+                        else if(DEGState == 0) {
                             logPds0 += log(Pd0s0);
                             logPds1 += log(Pd0s1);
                         }
@@ -162,6 +163,12 @@ public class InferDriverActivation {
         int SGASize = inferDriverTable.get(0).size();
         long totalNum = tumorSize * SGASize;
         long totalChange = 0;
+//        add for output value one compare
+        long numOldof1 = 0;
+        long numNewof1 = 0;
+        long numOld1New0 = 0;
+        long numNew1Old0 = 0;
+//      add ended
         for (int i = 0; i < tumorSize; i++) {
             for (int j = 0; j < SGASize; j++) {
                 double vNew = inferDriverTable.get(i).get(j);
@@ -169,8 +176,26 @@ public class InferDriverActivation {
                 if (vNew != vOld) { 
                     totalChange++;
                 }
+                //added begin
+                if (vNew == '1'){
+                    numNewof1 += 1;
+                    if(vOld == '0'){
+                        numNew1Old0 += 1;
+                    }
+                }
+                if (vOld == '1'){
+                    numOldof1 += 1;
+                    if(vNew == '0'){
+                        numOld1New0 += 1;
+                    
+                    }
+                }
+                //added end
+              
+                
             }
         }
+        System.out.println("numOld1, numOld1New0, numNew1, numNew1Old0 :" + numOldof1 + "," + numOld1New0 + "," + numNewof1 + "," + numNew1Old0);
         return (double)totalChange/totalNum;
     }
     
@@ -191,7 +216,6 @@ public class InferDriverActivation {
                     strStates +=  driverActivationTable.get(i).get(j) + ",";
                 }
                 //remove the last ","
-                strStates = strStates.substring(0, strStates.length() - 1);
                 bf.write(strStates + "\n");
             }
 
