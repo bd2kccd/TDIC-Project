@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
         }
     }
     
-    //in construct, readin file and build network
+    //in construct, readin files and build network
     Data data(phosphFile, intervFile, edgeFile);
     double prevJointProb = 0.0;
     while (true){
@@ -101,8 +101,8 @@ int main(int argc, char** argv) {
         data.calCPTofEachNode();
         //calculate the converge parameter
         double jointProb = data.calJointProbOfAllNodes();
-        if (fabs(jointProb - prevJointProb) < 0.01){
-            data.outputCombinedMatrix(outPath);
+        if (fabs(jointProb - prevJointProb) < 0.001){
+//            outputResults();
             break;
         }
         else{

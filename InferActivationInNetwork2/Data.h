@@ -51,9 +51,9 @@ private:
     void readinMatrix(string fileName, char type); //read in phosphorylation table, initial activation table and combine to nodeValueTable 
     void readinEdges(string edgeFileName);    
     void buildNetwork();
-    void getCPTvalueOfANode(Node* Anode, int caseNumber,vector<double>& inferValueOfNode );
-    double getCPTvalueOfANode(Node* Anode, int caseNumber );
-    void getCPTvalueOfOneChildOfANode(Node* childNode, Node* ANode,int caseNumber, vector<double>& inferValueOfNode); 
+    double getCPT1valueOfANode(int Aindex, int caseNumber);
+//    double getCPTvalueOfANode(Node* Anode, int caseNumber );
+    void getCPTvalueOfOneChildOfANode(int childIndex, int Aindex,int caseNumber, vector<double>& AchildCPT); 
     
     
 };
