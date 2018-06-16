@@ -31,29 +31,36 @@ public:
     double calJointProbOfAllNodes();
     void thresholdNupdate();
     void outputCombinedMatrix(string outPath);
-    
+    void outputActivatMatrix(string outPath);
+    void outputRandomNumMatrix(string outPath);
+    void outputJointProb(string outPath);
 private:
     int nProtein; //number of proteins
     int nCase; //number of cases
     
     vector <string> proteinNames;
-    vector <string> caseNames;
+
+    vector<int> intervMatrix; //1: stimulator, -1: inhibitor, 0: no intervention
+    vector<int> combinedMatrix; //activation nodes + phosphorylation nodes
+
+    vector<double> activatMatrix;
+    vector<float> randomNumMatrix;
+    
+    vector<Node*> nodeList; 
     
     vector<string> edges;
     
     map<string,int> nodeListMap; //nodeName to nodeIndex
     
-    vector<int> intervMatrix; //1: stimulator, 0: inhibitor, 99: no intervention
-    vector<double> activatMatrix;
-    vector<int> combinedMatrix; //activation nodes + phosphorylation nodes
-
-    vector<Node*> nodeList; 
+    vector<double> jointProbs;
+    
+    
     void readinMatrix(string fileName, char type); //read in phosphorylation table, initial activation table and combine to nodeValueTable 
     void readinEdges(string edgeFileName);    
     void buildNetwork();
-    void getCPTvalueOfANode(Node* Anode, int caseNumber,vector<double>& inferValueOfNode );
-    double getCPTvalueOfANode(Node* Anode, int caseNumber );
-    void getCPTvalueOfOneChildOfANode(Node* childNode, Node* ANode,int caseNumber, vector<double>& inferValueOfNode); 
+    double getCPT1valueOfANode(int Aindex, int caseNumber);
+//    double getCPTvalueOfANode(Node* Anode, int caseNumber );
+    void getCPTvalueOfOneChildOfANode(int childIndex, int Aindex,int caseNumber, vector<double>& AchildCPT); 
     
     
 };

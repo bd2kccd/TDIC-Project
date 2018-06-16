@@ -1,15 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/* 
- * File:   Node.h
- * Author: XIM33
- *
- * Created on April 9, 2018, 3:18 PM
- */
 
 #include <vector>
 #include <set>
@@ -42,16 +30,17 @@ public:
     
     vector<double>& getCPT(){return this->CPT1;};
     void calculateCPT(vector<int>& combinedMatrix, int numOfCases);
-    
-    void sortParentsChildren();
+    void updateACPT(int change, vector<int>& combinedMatrix, int numOfCases, int caseNum);
+    void updateChildCPT(int change,int parentIdx, vector<int>& combinedMatrix, int numOfCases, int caseNum);
     
 private:
     string name;
     int index;
     char type;
-    vector<int> parents; //save parent node index
-    vector<int> children;//using Node itself to easy get children's parents
-    vector<double> CPT1; //P(N-1|Pa(N))  for   P(N-0|Pa(N)) = 1-P(N-1|Pa(N))
+    vector<int> parents; 
+    vector<int> children;
+    vector<double> CPT1; 
+    vector<float> count1, count0; 
 };
 
 #endif /* NODE_H */

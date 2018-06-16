@@ -30,8 +30,8 @@ using namespace std;
  * 
  */
 int main(int argc, char** argv) {
-//    time_t t_start,t_end;
-//    time (&t_start);
+    time_t t_start,t_end;
+    time (&t_start);
     string phosphFile, intervFile, edgeFile, outPath;
     int hasOpt;
     while((hasOpt = getopt(argc, argv, "hp:i:e:o:")) != -1)
@@ -93,38 +93,50 @@ int main(int argc, char** argv) {
         }
     }
     
-    //in construct, readin file and build network
+    //in construct, readin files and build network
     Data data(phosphFile, intervFile, edgeFile);
+
+    cout << "Calculate CPT for each node.." << "\n";
+    data.calCPTofEachNode();
+        
     double prevJointProb = 0.0;
+    int count = 0;  
     while (true){
-        //calculate the CPT for each node
-        data.calCPTofEachNode();
-        //calculate the converge parameter
+        count ++;
+    //calculate the converge parameter
+        cout << "Calculate joint probability of all nodes.." << "\n";
         double jointProb = data.calJointProbOfAllNodes();
-        if (fabs(jointProb - prevJointProb) < 0.01){
+        float diff = fabs(jointProb - prevJointProb);
+        cout << "Joint probability difference is " << diff << "\n";
+        if (diff < 0.001 || count > 1000)  {
+//        if (count > 5){
+            data.outputActivatMatrix(outPath);
             data.outputCombinedMatrix(outPath);
+            data.outputJointProb(outPath);
+            data.outputRandomNumMatrix(outPath);
+                    
             break;
         }
         else{
             prevJointProb = jointProb;
             //calculate CPT and lookup in CPT to get the inferState of each protein for each case
+            cout << "Infer activation ..." << "\n";
             data.inferActivation();
-            //generate threshold to cut activation table and replace to combinedMatrix
-            data.thresholdNupdate();
             
+           
         }
      }
-
+    cout << "Number of infer iterations is " << count << "\n";
     
-//    time (&t_end);
-//    long seconds = difftime (t_end,t_start);
-//    
-//    int hours, minutes;
-// 
-//    minutes = seconds / 60;
-//    hours = minutes / 60;
-//    
-//    cout <<  " Elasped time is  " << hours << " hours " << minutes%60 << " minutes " << seconds%60 << " seconds." << "\n";
+    time (&t_end);
+    long seconds = difftime (t_end,t_start);
+    
+    int hours, minutes;
+ 
+    minutes = seconds / 60;
+    hours = minutes / 60;
+    
+    cout <<  " Elasped time is  " << hours << " hours " << minutes%60 << " minutes " << seconds%60 << " seconds." << "\n";
 
 }
 
