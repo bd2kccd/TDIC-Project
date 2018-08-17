@@ -3,34 +3,32 @@ This is the version to infer all SGA, and update original SGA=1
 
 EMforInferDriverState(dataObj)
     Read in Edgelist, SGAMatrix, DEGMatrix. 
-	=> driverSGATable, targetDEGTable, edgeList
+	=> driverSGATable_ori, driverSGATable, targetDEGTable, edgeList
 	=> driverSGAs, targetDEGs, mapSGAtoDEGs, tumorList
      
-    T=0.5
+
     Loop:
 		
 		EstimateParam(EdgeList, driverSGATable, targetDEGTable, DriverSGAs, targetDEGs)
 		=> mapEdgeParams, mapSGAParam
 		
-		InferActivationOfDriver(mapEdgeParams, mapSGAParam, driverSGATable, targetDEGTable)
-		=> driverActivites  
+		InferActivationOfDriver(mapEdgeParams, mapSGAParam, driverSGATable, targetDEGTable, driverSGATable_ori)
+		=> driverActiviteTable
 		
-		thresholding(driverActivity,T)
+		T = random number r
+		thresholding(driverActivtionTable,T)
 		=>inferDriverTable
-		
-		UpdateInferDriverTable with original SGA=1
-		=>inferDriverTable
-		
+
 		CompareMatrix(drvierSGATable, inferrDriverTable)
 		=> gtChange
         
-		if (gtChange < 5%)
+		if (gtChange < 1%)
 			output inferDriverMatrix
 			break
 		elses
 			DataObj.updateDriverGtMatrix(inferDriverTable)
 			=>driverSGATable
-			T += 0.05
+
 	     
 class ReadInData
 	public: edgeList, tripletSGA, tripletDEG, mapSGAtoDEGS,driverSGA, driverSGATable,targetDEG, targetDEGTable
@@ -59,19 +57,22 @@ class InferActivationOfDriver(dataObj, probObj)
 	InferActivationOfDriver
 		foreach t in tumors
 			foreach SGA s in driverSGA
-				get DEGS from mapSGAtoDEGs						
-				
-				foreach DEG d in DEGs:
-					state = getDEGState(d,TargetDegMatrix)
+				if ori_SGA == 1
+					p(s=1|d)
+				else
+					get DEGS from mapSGAtoDEGs						
 					
-					if (tate == 0)
-						logP(d|s=0) += logP(d=0|s=0)
-						logP(d|s=1) += logP(d=0|s=1)
-					else
-						logP(d|s=0) += logP(d=1|s=0)
-						logP(d|s=1) += logP(d=1|s=1)
-				
-				p(s=1|d) = 1/(1 + exp(logP(d|s=0) - logP(d|s=1)) * p(s=0)/p(s=1) )
+					foreach DEG d in DEGs:
+						state = getDEGState(d,TargetDegMatrix)
+						
+						if (tate == 0)
+							logP(d|s=0) += logP(d=0|s=0)
+							logP(d|s=1) += logP(d=0|s=1)
+						else
+							logP(d|s=0) += logP(d=1|s=0)
+							logP(d|s=1) += logP(d=1|s=1)
+					
+					p(s=1|d) = 1/(1 + exp(logP(d|s=0) - logP(d|s=1)) * p(s=0)/p(s=1) )
 					
 				driverGtActivity(t,s) = p(s=1|d)
 	
