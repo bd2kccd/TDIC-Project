@@ -1,0 +1,10 @@
+Suppose you put the executables in a working directory, then create a subfolder under this directory called 'DataSource', and put all input files into this subfolder. And create another subfolder under this directory called 'output'
+
+Goto the working folder, the command lines should be something like these:
+
+ 
+./TDIC_GD_exeOMP -p ./DataSource/strcprior.poplv.csv -f ./DataSource/SGAmatrix.csv -d ./DataSource/DEGmatrix.csv -o ./DataSource/globalDriver.csv    (--> Generate global driver)
+
+./PanCanTDICexeOOMP -p ./DataSource/strcprior.tumorspecific.csv -f ./DataSource/SGAmatrix.csv -d ./DataSource/DEGmatrix.csv  -g ./DataSource/globalDriver.csv -o ./output   ( ---> Run TDIC)
+ 
+ 

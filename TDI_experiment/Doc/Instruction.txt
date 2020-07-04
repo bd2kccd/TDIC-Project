@@ -1,0 +1,7 @@
+1. Compile TDI and TDI gloable project into executable files with the command
+
+	g++ -O3 *.cpp -o executablefile -fopenmp
+	
+	or use the already compiled files in this folder directly.
+
+2. Run bashScript.sh

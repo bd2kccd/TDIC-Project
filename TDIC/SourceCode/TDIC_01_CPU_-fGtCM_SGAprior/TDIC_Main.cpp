@@ -29,16 +29,16 @@ int main(int argc, char** argv) {
     
     time_t t_start,t_end;
     time (&t_start);
-    
+    float v0 = 0.1;    
     int rowStart = -1;
     int rowEnd = -1;
     int hasOpt;
     int nTumors;
     GTMatrix* gtMatrix;
     PanCanGTMatrix* panCanGtMatrix;
-    string gtFilePath, gtcFilePath, globalDriverPath, degFilePath, outPath, priorFilePath;
+    string gtFilePath, gtcFilePath, globalDriverPath, degFilePath, outPath, priorFilePath, strv0;
 
-    while((hasOpt = getopt(argc, argv, "hs:e:f:d:g:o:c:p:")) != -1)
+    while((hasOpt = getopt(argc, argv, "hs:e:f:d:g:o:c:p:v:")) != -1)
     {
         switch(hasOpt)
         {
@@ -54,6 +54,11 @@ int main(int argc, char** argv) {
                 gtcFilePath = optarg;
                 break;
 
+            case 'v':
+                strv0 = optarg ;
+                v0 = atof(strv0.c_str());
+                break;
+            
             case 'd':
                 degFilePath = optarg;
                 break;
@@ -184,8 +189,7 @@ int main(int argc, char** argv) {
 
     // check use gpu flag, if yes branch out to TCIGPU(GTmatrix, DEG, Glog)
     
-    
-    float v0 = 0.1;
+    cout << "v0 = " << v0 << "\n";
     if (!gtFilePath.empty())//process GTMatrix
     {
 //        #pragma omp parallel for
